@@ -1,0 +1,1867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel - Earn Now</title>
+  
+  <!-- Firebase App (core Firebase SDK) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <!-- Firebase Firestore -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  
+  <style>
+    :root {
+      --primary-gradient: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+      --secondary-gradient: linear-gradient(135deg, #2575fc 0%, #6a11cb 100%);
+      --card-bg: rgba(255, 255, 255, 0.9);
+      --glass-bg: rgba(255, 255, 255, 0.15);
+      --glass-border: rgba(255, 255, 255, 0.2);
+      --text-dark: #2d3436;
+      --text-light: #ffffff;
+      --shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      --success: #4caf50;
+      --warning: #ff9800;
+      --danger: #f44336;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    body {
+      background: var(--primary-gradient);
+      min-height: 100vh;
+      padding: 20px;
+      color: var(--text-dark);
+    }
+    
+    .app-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      backdrop-filter: blur(10px);
+      background: var(--glass-bg);
+      border-radius: 20px;
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    
+    header {
+      background: var(--secondary-gradient);
+      color: var(--text-light);
+      padding: 25px 20px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    header::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      transform: rotate(30deg);
+    }
+    
+    h1 {
+      font-size: 28px;
+      margin-bottom: 15px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .content-section {
+      padding: 25px 20px;
+      background: var(--card-bg);
+      margin: 15px;
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+    }
+    
+    h2 {
+      font-size: 20px;
+      margin-bottom: 20px;
+      color: #6a11cb;
+      display: flex;
+      align-items: center;
+    }
+    
+    h2::before {
+      content: '';
+      display: inline-block;
+      width: 8px;
+      height: 24px;
+      background: var(--primary-gradient);
+      border-radius: 10px;
+      margin-right: 12px;
+    }
+    
+    .btn {
+      padding: 16px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    
+    .btn-primary {
+      background: var(--primary-gradient);
+      color: var(--text-light);
+      box-shadow: 0 4px 15px rgba(106, 17, 203, 0.3);
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(106, 17, 203, 0.4);
+    }
+    
+    .input-group {
+      margin-bottom: 15px;
+    }
+    
+    .input-label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #555;
+    }
+    
+    input, select {
+      width: 100%;
+      padding: 15px;
+      border-radius: 12px;
+      border: 1px solid #ddd;
+      font-size: 16px;
+      background: #f8f9fa;
+      transition: all 0.3s ease;
+    }
+    
+    input:focus, select:focus {
+      outline: none;
+      border-color: #6a11cb;
+      box-shadow: 0 0 0 3px rgba(106, 17, 203, 0.1);
+    }
+    
+    .status-badge {
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    .status-pending {
+      background: #fff3cd;
+      color: #856404;
+    }
+    
+    .status-paid {
+      background: #d4edda;
+      color: #155724;
+    }
+    
+    .status-rejected {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 20px;
+      background: #4caf50;
+      color: #fff;
+      border-radius: 12px;
+      display: none;
+      z-index: 2000;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+      animation: slideIn 0.3s ease;
+    }
+    
+    @keyframes slideIn {
+      from { transform: translateX(100px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 15px;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+    
+    th, td {
+      padding: 12px 8px;
+      border: 1px solid #e9ecef;
+      text-align: center;
+      font-size: 14px;
+    }
+    
+    th {
+      background: #f8f9fa;
+      font-weight: 600;
+    }
+    
+    .action-btn {
+      cursor: pointer;
+      padding: 6px 10px;
+      margin: 0 2px;
+      border-radius: 6px;
+      font-size: 12px;
+      border: none;
+      transition: all 0.2s ease;
+    }
+    
+    .approve {
+      background: #4caf50;
+      color: white;
+    }
+    
+    .reject {
+      background: #f44336;
+      color: white;
+    }
+    
+    .delete {
+      background: #6c757d;
+      color: white;
+    }
+    
+    .hidden-section {
+      display: none;
+    }
+    
+    /* Admin Panel Styling */
+    .admin-login-form {
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+    
+    .admin-controls-panel {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+    
+    /* Country Restriction Styling */
+    .country-restrictions {
+      background: white;
+      padding: 20px;
+      border-radius: 16px;
+      margin-top: 20px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+    
+    .country-search {
+      position: relative;
+      margin-bottom: 15px;
+    }
+    
+    .country-search input {
+      padding-left: 40px;
+    }
+    
+    .search-icon {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #999;
+    }
+    
+    .country-tiers {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    
+    .tier-btn {
+      padding: 10px;
+      border: 2px solid #e4e8f0;
+      border-radius: 8px;
+      background: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: center;
+    }
+    
+    .tier-btn:hover {
+      border-color: #6a11cb;
+      background: rgba(106, 17, 203, 0.05);
+    }
+    
+    .tier-btn.selected {
+      border-color: #6a11cb;
+      background: rgba(106, 17, 203, 0.1);
+    }
+    
+    .tier-high {
+      color: #e74c3c;
+    }
+    
+    .tier-medium {
+      color: #f39c12;
+    }
+    
+    .tier-low {
+      color: #27ae60;
+    }
+    
+    .countries-list {
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #e4e8f0;
+      border-radius: 8px;
+      padding: 10px;
+    }
+    
+    .country-item {
+      display: flex;
+      align-items: center;
+      padding: 8px;
+      border-radius: 6px;
+      margin-bottom: 5px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .country-item:hover {
+      background: #f8f9fa;
+    }
+    
+    .country-item.selected {
+      background: rgba(106, 17, 203, 0.1);
+    }
+    
+    .country-checkbox {
+      margin-right: 10px;
+    }
+    
+    /* User Management Styling */
+    .user-management {
+      background: white;
+      padding: 20px;
+      border-radius: 16px;
+      margin-top: 20px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+    
+    .user-search {
+      position: relative;
+      margin-bottom: 15px;
+    }
+    
+    .user-search input {
+      padding-left: 40px;
+    }
+    
+    .users-list {
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid #e4e8f0;
+      border-radius: 8px;
+      padding: 10px;
+    }
+    
+    .user-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      background: #f8f9fa;
+    }
+    
+    .user-info {
+      flex: 1;
+    }
+    
+    .user-name {
+      font-weight: 600;
+    }
+    
+    .user-id {
+      font-size: 12px;
+      color: #666;
+    }
+    
+    .user-balance {
+      font-weight: 700;
+      color: #6a11cb;
+      margin-right: 10px;
+    }
+    
+    .user-actions {
+      display: flex;
+      gap: 5px;
+    }
+    
+    .edit-balance-form {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+      padding: 10px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .edit-balance-form input {
+      flex: 1;
+      font-size: 16px;
+      font-weight: bold;
+      padding: 12px;
+      border: 2px solid #6a11cb;
+    }
+    
+    /* Firebase loading indicator */
+    .firebase-loading {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      z-index: 3000;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      font-size: 18px;
+    }
+    
+    /* New styles for enhanced user management */
+    .user-details-panel {
+      background: white;
+      padding: 15px;
+      border-radius: 12px;
+      margin-top: 15px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+    }
+    
+    .user-details-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    
+    .user-activity-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    
+    .user-activity-table th,
+    .user-activity-table td {
+      padding: 8px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+      font-size: 12px;
+    }
+    
+    .user-activity-table th {
+      background-color: #f8f9fa;
+      font-weight: 600;
+    }
+    
+    .flag-icon {
+      width: 20px;
+      height: 15px;
+      margin-right: 5px;
+      vertical-align: middle;
+      border: 1px solid #ddd;
+    }
+    
+    .blocked-user {
+      background-color: #fff5f5;
+      border: 1px solid #ffcccc;
+    }
+    
+    .block-btn {
+      background: #f44336;
+      color: white;
+    }
+    
+    .unblock-btn {
+      background: #4caf50;
+      color: white;
+    }
+    
+    .activity-badge {
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+    
+    .activity-ad {
+      background: #e3f2fd;
+      color: #1976d2;
+    }
+    
+    .activity-withdrawal {
+      background: #e8f5e9;
+      color: #388e3c;
+    }
+    
+    .activity-login {
+      background: #fff3e0;
+      color: #f57c00;
+    }
+    
+    .activity-ad_click {
+      background: #f3e5f5;
+      color: #7b1fa2;
+    }
+    
+    .user-status {
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+    
+    .status-active {
+      background: #e8f5e9;
+      color: #388e3c;
+    }
+    
+    .status-blocked {
+      background: #ffebee;
+      color: #d32f2f;
+    }
+    
+    .user-ip {
+      font-family: monospace;
+      font-size: 11px;
+      color: #666;
+    }
+    
+    .form-title {
+      font-size: 18px;
+      margin-bottom: 15px;
+      color: #6a11cb;
+      text-align: center;
+    }
+    
+    /* Task Limit Settings */
+    .task-limit-settings {
+      background: white;
+      padding: 20px;
+      border-radius: 16px;
+      margin-top: 20px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+    
+    .withdrawal-methods {
+      background: white;
+      padding: 20px;
+      border-radius: 16px;
+      margin-top: 20px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+    
+    .method-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .method-controls {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+    
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 24px;
+    }
+    
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    
+    input:checked + .slider {
+      background-color: #4caf50;
+    }
+    
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+    
+    .stats-card {
+      background: white;
+      padding: 15px;
+      border-radius: 12px;
+      margin: 10px 0;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+    
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: #6a11cb;
+    }
+    
+    .stat-label {
+      font-size: 14px;
+      color: #666;
+    }
+    
+    /* Delete confirmation modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 4000;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .modal-content {
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      justify-content: center;
+    }
+    
+    .modal-buttons button {
+      padding: 10px 20px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    
+    .confirm-delete {
+      background: #f44336;
+      color: white;
+    }
+    
+    .cancel-delete {
+      background: #6c757d;
+      color: white;
+    }
+    
+    .delete-user-btn {
+      background: #dc3545;
+      color: white;
+    }
+    
+    /* Enhanced balance display */
+    .balance-display {
+      font-size: 18px;
+      font-weight: bold;
+      color: #6a11cb;
+      margin: 5px 0;
+    }
+    
+    /* New styles for balance edit modal */
+    .balance-edit-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 4000;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .balance-edit-content {
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    
+    .balance-edit-input {
+      font-size: 24px;
+      font-weight: bold;
+      padding: 15px;
+      text-align: center;
+      width: 100%;
+      margin: 15px 0;
+      border: 2px solid #6a11cb;
+      border-radius: 8px;
+    }
+    
+    .balance-edit-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      justify-content: center;
+    }
+    
+    .balance-edit-buttons button {
+      padding: 10px 20px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    
+    .save-balance-btn {
+      background: #4caf50;
+      color: white;
+    }
+    
+    .cancel-balance-btn {
+      background: #6c757d;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="firebase-loading" id="firebaseLoading">
+    <div style="text-align: center;">
+      <div class="loading"></div>
+      <p>Connecting to server...</p>
+    </div>
+  </div>
+
+  <div class="modal" id="deleteModal">
+    <div class="modal-content">
+      <h3>Delete User</h3>
+      <p>Are you sure you want to delete this user? This action cannot be undone.</p>
+      <div class="modal-buttons">
+        <button class="confirm-delete" id="confirmDelete">Delete</button>
+        <button class="cancel-delete" id="cancelDelete">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="balance-edit-modal" id="balanceEditModal">
+    <div class="balance-edit-content">
+      <h3>Edit User Balance</h3>
+      <input type="number" class="balance-edit-input" id="balanceEditInput" step="0.01" min="0" placeholder="Enter new balance">
+      <div class="balance-edit-buttons">
+        <button class="save-balance-btn" id="saveBalanceBtn">Save</button>
+        <button class="cancel-balance-btn" id="cancelBalanceBtn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-container">
+    <header>
+      <h1>Earn Now - Admin Panel</h1>
+    </header>
+
+    <main>
+      <div class="content-section">
+        <div class="admin-login-form">
+          <div class="input-group">
+            <div class="input-label">Admin Password</div>
+            <input type="password" id="admin-password" placeholder="Enter admin password">
+          </div>
+          <button class="btn btn-primary" id="admin-login">
+            <span>🔑</span> Login
+          </button>
+        </div>
+        
+        <div id="admin-controls" class="admin-controls-panel hidden-section">
+          <div class="form-title">Admin Settings</div>
+          
+          <div class="input-group">
+            <div class="input-label">Per Ad Rate (৳)</div>
+            <input type="number" id="per-ad-rate" step="0.06" value="0.06" min="0.06" placeholder="Enter amount per ad">
+          </div>
+          
+          <div class="task-limit-settings">
+            <h3>Daily Task Limits</h3>
+            
+            <div class="input-group">
+              <div class="input-label">Daily Ad Limit per User</div>
+              <input type="number" id="daily-task-limit" value="1234" min="1" placeholder="Enter daily task limit">
+            </div>
+            
+            <div class="stats-grid">
+              <div class="stats-card">
+                <div class="stat-value" id="total-users">0</div>
+                <div class="stat-label">Total Users</div>
+              </div>
+              <div class="stats-card">
+                <div class="stat-value" id="active-today">0</div>
+                <div class="stat-label">Active Today</div>
+              </div>
+              <div class="stats-card">
+                <div class="stat-value" id="total-ads-today">0</div>
+                <div class="stat-label">Ads Watched Today</div>
+              </div>
+              <div class="stats-card">
+                <div class="stat-value" id="total-clicks-today">0</div>
+                <div class="stat-label">Ad Clicks Today</div>
+              </div>
+              <div class="stats-card">
+                <div class="stat-value" id="total-withdrawals">0</div>
+                <div class="stat-label">Total Withdrawals</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="country-restrictions">
+            <h3>Country Restrictions by eCPM Tier</h3>
+            
+            <div class="country-search">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="country-search" placeholder="Search for countries...">
+            </div>
+            
+            <div class="country-tiers">
+              <div class="tier-btn tier-high" data-tier="high">High eCPM</div>
+              <div class="tier-btn tier-medium" data-tier="medium">Medium eCPM</div>
+              <div class="tier-btn tier-low" data-tier="low">Low eCPM</div>
+            </div>
+            
+            <div class="countries-list" id="countries-list"></div>
+            
+            <div class="input-group">
+              <div class="input-label">Selected Countries</div>
+              <div id="selected-countries"></div>
+            </div>
+          </div>
+          
+          <div class="withdrawal-methods">
+            <h3>Withdrawal Methods</h3>
+            
+            <div id="methods-list">
+              <!-- Methods will be loaded here -->
+            </div>
+            
+            <div class="input-group" style="margin-top: 15px;">
+              <div class="input-label">Add New Method</div>
+              <div style="display: flex; gap: 10px;">
+                <input type="text" id="new-method-name" placeholder="Method name (e.g., Rocket)">
+                <button class="btn btn-primary" id="add-method-btn">Add</button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="user-management">
+            <h3>User Management</h3>
+            
+            <div class="user-search">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="user-search" placeholder="Search users...">
+            </div>
+            
+            <div class="users-list" id="users-list"></div>
+          </div>
+          
+          <button class="btn btn-primary" id="save-settings">
+            <span>💾</span> Save Settings
+          </button>
+          
+          <h3 style="margin-top: 20px;">Withdrawal Requests</h3>
+          <div style="overflow-x: auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th>User Name</th><th>Username</th><th>Method</th><th>Number</th><th>Amount</th><th>Date</th><th>Status</th><th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="withdraw-requests"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="notification" id="notification"></div>
+
+  <script>
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDp49URVg2ipSBuoEBGZyqWWyc29cxAleE",
+      authDomain: "easy-earn-af82c.firebaseapp.com",
+      projectId: "easy-earn-af82c",
+      storageBucket: "easy-earn-af82c.firebasestorage.app",
+      messagingSenderId: "572340074151",
+      appId: "1:572340074151:web:778d58946c1163427acd82",
+      measurementId: "G-3RFZSPZD9W"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      // Show loading indicator immediately
+      document.getElementById("firebaseLoading").style.display = "flex";
+
+      // Country data with eCPM tiers
+      const countryData = [
+        {code: "US", name: "United States", tier: "high"},
+        {code: "CA", name: "Canada", tier: "high"},
+        {code: "GB", name: "United Kingdom", tier: "high"},
+        {code: "AU", name: "Australia", tier: "high"},
+        {code: "DE", name: "Germany", tier: "high"},
+        {code: "FR", name: "France", tier: "high"},
+        {code: "JP", name: "Japan", tier: "high"},
+        {code: "KR", name: "South Korea", tier: "high"},
+        {code: "SG", name: "Singapore", tier: "high"},
+        {code: "NL", name: "Netherlands", tier: "high"},
+        {code: "SE", name: "Sweden", tier: "high"},
+        {code: "NO", name: "Norway", tier: "high"},
+        {code: "CH", name: "Switzerland", tier: "high"},
+        {code: "DK", name: "Denmark", tier: "high"},
+        {code: "FI", name: "Finland", tier: "high"},
+        {code: "IE", name: "Ireland", tier: "high"},
+        {code: "AT", name: "Austria", tier: "high"},
+        {code: "BE", name: "Belgium", tier: "high"},
+        {code: "NZ", name: "New Zealand", tier: "high"},
+        {code: "IT", name: "Italy", tier: "medium"},
+        {code: "ES", name: "Spain", tier: "medium"},
+        {code: "BR", name: "Brazil", tier: "medium"},
+        {code: "MX", name: "Mexico", tier: "medium"},
+        {code: "PL", name: "Poland", tier: "medium"},
+        {code: "RU", name: "Russia", tier: "medium"},
+        {code: "TR", name: "Turkey", tier: "medium"},
+        {code: "SA", name: "Saudi Arabia", tier: "medium"},
+        {code: "ZA", name: "South Africa", tier: "medium"},
+        {code: "AR", name: "Argentina", tier: "medium"},
+        {code: "CL", name: "Chile", tier: "medium"},
+        {code: "CO", name: "Colombia", tier: "medium"},
+        {code: "MY", name: "Malaysia", tier: "medium"},
+        {code: "TH", name: "Thailand", tier: "medium"},
+        {code: "ID", name: "Indonesia", tier: "medium"},
+        {code: "PH", name: "Philippines", tier: "medium"},
+        {code: "VN", name: "Vietnam", tier: "medium"},
+        {code: "IN", name: "India", tier: "low"},
+        {code: "PK", name: "Pakistan", tier: "low"},
+        {code: "BD", name: "Bangladesh", tier: "low"},
+        {code: "NG", name: "Nigeria", tier: "low"},
+        {code: "EG", name: "Egypt", tier: "low"},
+        {code: "ET", name: "Ethiopia", tier: "low"},
+        {code: "KE", name: "Kenya", tier: "low"},
+        {code: "GH", name: "Ghana", tier: "low"},
+        {code: "TZ", name: "Tanzania", tier: "low"},
+        {code: "UG", name: "Uganda", tier: "low"},
+        {code: "MM", name: "Myanmar", tier: "low"},
+        {code: "KH", name: "Cambodia", tier: "low"},
+        {code: "LA", name: "Laos", tier: "low"},
+        {code: "NP", name: "Nepal", tier: "low"},
+        {code: "LK", name: "Sri Lanka", tier: "low"}
+      ];
+
+      const adminLoginBtn = document.getElementById("admin-login");
+      const adminControls = document.getElementById("admin-controls");
+      const perAdRateInput = document.getElementById("per-ad-rate");
+      const dailyTaskLimitInput = document.getElementById("daily-task-limit");
+      const saveSettingsBtn = document.getElementById("save-settings");
+      const withdrawRequestsTable = document.getElementById("withdraw-requests");
+      const notification = document.getElementById("notification");
+      const countriesList = document.getElementById("countries-list");
+      const selectedCountries = document.getElementById("selected-countries");
+      const countrySearch = document.getElementById("country-search");
+      const tierButtons = document.querySelectorAll('.tier-btn');
+      const usersList = document.getElementById("users-list");
+      const userSearch = document.getElementById("user-search");
+      const methodsList = document.getElementById("methods-list");
+      const newMethodNameInput = document.getElementById("new-method-name");
+      const addMethodBtn = document.getElementById("add-method-btn");
+      const deleteModal = document.getElementById("deleteModal");
+      const confirmDeleteBtn = document.getElementById("confirmDelete");
+      const cancelDeleteBtn = document.getElementById("cancelDelete");
+      const balanceEditModal = document.getElementById("balanceEditModal");
+      const balanceEditInput = document.getElementById("balanceEditInput");
+      const saveBalanceBtn = document.getElementById("saveBalanceBtn");
+      const cancelBalanceBtn = document.getElementById("cancelBalanceBtn");
+      
+      // Stats elements
+      const totalUsersEl = document.getElementById("total-users");
+      const activeTodayEl = document.getElementById("active-today");
+      const totalAdsTodayEl = document.getElementById("total-ads-today");
+      const totalClicksTodayEl = document.getElementById("total-clicks-today");
+      const totalWithdrawalsEl = document.getElementById("total-withdrawals");
+
+      let allRequests = [];
+      let allUsers = [];
+      let perAdRate = 0.06;
+      let dailyTaskLimit = 1234;
+      let isAdminLoggedIn = false;
+      let currentTierFilter = "all";
+      let selectedCountryCodes = [];
+      let withdrawalMethods = [];
+      let userToDelete = null;
+      let userToEditBalance = null;
+
+      // Format date as DD-MM-YYYY
+      function formatWithdrawalDate(dateString) {
+        if (!dateString) return 'Unknown';
+        
+        try {
+          const dateObj = typeof dateString.toDate === 'function' ? dateString.toDate() : new Date(dateString);
+          if (isNaN(dateObj.getTime())) return 'Invalid Date';
+          
+          const day = dateObj.getDate();
+          const month = dateObj.getMonth() + 1;
+          const year = dateObj.getFullYear();
+          return `${day}-${month}-${year}`;
+        } catch (e) {
+          return 'Invalid Date';
+        }
+      }
+
+      // Delete user functionality
+      function showDeleteModal(userId) {
+        userToDelete = userId;
+        deleteModal.style.display = "flex";
+      }
+
+      async function deleteUser(userId) {
+        try {
+          await db.collection("users").doc(userId).delete();
+          // Remove from local array
+          allUsers = allUsers.filter(user => user.id !== userId);
+          showNotification("User deleted successfully");
+          renderUsersList();
+          updateStats();
+        } catch (error) {
+          console.error("Error deleting user:", error);
+          showNotification("Error deleting user", false);
+        }
+      }
+
+      // Balance edit functionality
+      function showBalanceEditModal(userId) {
+        const user = allUsers.find(u => u.id === userId);
+        if (!user) return;
+        
+        userToEditBalance = userId;
+        balanceEditInput.value = user.balance || 0;
+        balanceEditModal.style.display = "flex";
+        balanceEditInput.focus();
+        balanceEditInput.select();
+      }
+
+      async function saveUserBalance() {
+        if (!userToEditBalance) return;
+        
+        const newBalance = parseFloat(balanceEditInput.value);
+        if (!isNaN(newBalance) && newBalance >= 0) {
+          // Update user balance in allUsers
+          const userIndex = allUsers.findIndex(u => u.id === userToEditBalance);
+          allUsers[userIndex].balance = newBalance;
+          
+          // Update in Firebase
+          await updateUserInAllUsers(userToEditBalance, { balance: newBalance });
+          
+          showNotification("Balance updated successfully");
+          renderUsersList();
+          balanceEditModal.style.display = "none";
+          userToEditBalance = null;
+        } else {
+          showNotification("Please enter a valid balance", false);
+        }
+      }
+
+      // Event listeners for delete modal
+      confirmDeleteBtn.addEventListener("click", () => {
+        if (userToDelete) {
+          deleteUser(userToDelete);
+          deleteModal.style.display = "none";
+          userToDelete = null;
+        }
+      });
+
+      cancelDeleteBtn.addEventListener("click", () => {
+        deleteModal.style.display = "none";
+        userToDelete = null;
+      });
+
+      // Close modal when clicking outside
+      deleteModal.addEventListener("click", (e) => {
+        if (e.target === deleteModal) {
+          deleteModal.style.display = "none";
+          userToDelete = null;
+        }
+      });
+
+      // Event listeners for balance edit modal
+      saveBalanceBtn.addEventListener("click", () => {
+        saveUserBalance();
+      });
+
+      cancelBalanceBtn.addEventListener("click", () => {
+        balanceEditModal.style.display = "none";
+        userToEditBalance = null;
+      });
+
+      // Close balance modal when clicking outside
+      balanceEditModal.addEventListener("click", (e) => {
+        if (e.target === balanceEditModal) {
+          balanceEditModal.style.display = "none";
+          userToEditBalance = null;
+        }
+      });
+
+      // Allow pressing Enter to save balance
+      balanceEditInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+          saveUserBalance();
+        }
+      });
+
+      async function loadAllRequests() {
+        try {
+          const requestsSnapshot = await db.collection("withdrawalRequests")
+            .orderBy("date", "desc")
+            .get();
+          
+          allRequests = [];
+          requestsSnapshot.forEach(doc => {
+            allRequests.push({id: doc.id, ...doc.data()});
+          });
+        } catch (error) {
+          console.error("Error loading withdrawal requests:", error);
+        }
+      }
+
+      async function loadAllUsers() {
+        try {
+          const usersSnapshot = await db.collection("users").get();
+          
+          allUsers = [];
+          usersSnapshot.forEach(doc => {
+            allUsers.push({id: doc.id, ...doc.data()});
+          });
+        } catch (error) {
+          console.error("Error loading users:", error);
+        }
+      }
+
+      async function loadSettings() {
+        try {
+          const settingsDoc = await db.collection("settings").doc("appSettings").get();
+          if (settingsDoc.exists) {
+            const settings = settingsDoc.data();
+            perAdRate = settings.perAdRate || 0.06;
+            dailyTaskLimit = settings.dailyTaskLimit || 1234;
+          }
+          
+          const countrySettingsDoc = await db.collection("settings").doc("countryRestrictions").get();
+          if (countrySettingsDoc.exists) {
+            const countrySettings = countrySettingsDoc.data();
+            selectedCountryCodes = countrySettings.allowedCountries || [];
+          }
+          
+          const methodsDoc = await db.collection("settings").doc("withdrawalMethods").get();
+          if (methodsDoc.exists) {
+            withdrawalMethods = methodsDoc.data().methods || [];
+          } else {
+            // Default methods
+            withdrawalMethods = [
+              { name: "bKash", enabled: true },
+              { name: "Nagad", enabled: true },
+              { name: "Rocket", enabled: true },
+              { name: "Banglalink", enabled: true },
+              { name: "Grameenphone", enabled: true },
+              { name: "Robi", enabled: true },
+              { name: "Airtel", enabled: true }
+            ];
+          }
+        } catch (error) {
+          console.error("Error loading settings:", error);
+        }
+      }
+
+      async function updateWithdrawalRequest(requestId, updates) {
+        try {
+          await db.collection("withdrawalRequests").doc(requestId).update(updates);
+        } catch (error) {
+          console.error("Error updating withdrawal request:", error);
+        }
+      }
+
+      async function deleteWithdrawalRequest(requestId) {
+        try {
+          await db.collection("withdrawalRequests").doc(requestId).delete();
+        } catch (error) {
+          console.error("Error deleting withdrawal request:", error);
+        }
+      }
+
+      async function saveSettings() {
+        try {
+          await db.collection("settings").doc("appSettings").set({
+            perAdRate: perAdRate,
+            dailyTaskLimit: dailyTaskLimit
+          });
+          
+          await db.collection("settings").doc("countryRestrictions").set({
+            allowedCountries: selectedCountryCodes,
+            restrictionEnabled: selectedCountryCodes.length > 0
+          });
+          
+          await db.collection("settings").doc("withdrawalMethods").set({
+            methods: withdrawalMethods
+          });
+        } catch (error) {
+          console.error("Error saving settings:", error);
+          showNotification("Error saving settings", false);
+        }
+      }
+
+      async function updateUserInAllUsers(userId, updates) {
+        try {
+          await db.collection("users").doc(userId).update(updates);
+        } catch (error) {
+          console.error("Error updating user:", error);
+        }
+      }
+
+      async function loadData() {
+        // Show loading indicator
+        document.getElementById("firebaseLoading").style.display = "flex";
+        
+        try {
+          await Promise.all([
+            loadAllRequests(),
+            loadAllUsers(),
+            loadSettings()
+          ]);
+          
+          updateRequestsTable();
+          renderCountryList();
+          renderSelectedCountries();
+          renderUsersList();
+          renderWithdrawalMethods();
+          updateStats();
+        } catch (error) {
+          console.error("Error loading data:", error);
+          showNotification("Error loading data", false);
+        } finally {
+          // Hide loading indicator
+          document.getElementById("firebaseLoading").style.display = "none";
+        }
+      }
+      
+      function showNotification(msg, success=true) {
+        notification.textContent = msg;
+        notification.style.background = success ? "#4caf50" : "#f44336";
+        notification.style.display = "block";
+        setTimeout(()=>notification.style.display="none",2000);
+      }
+
+      function updateRequestsTable() {
+        withdrawRequestsTable.innerHTML = "";
+        
+        if (allRequests.length === 0) {
+          withdrawRequestsTable.innerHTML = `
+            <tr>
+              <td colspan="8" style="text-align: center; padding: 20px; color: #666;">
+                No withdrawal requests yet
+              </td>
+            </tr>
+          `;
+          return;
+        }
+        
+        allRequests.forEach((r,i)=>{
+          let row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${r.userName || 'Unknown'}</td>
+            <td>${r.userUsername || 'Unknown'}</td>
+            <td>${r.method}</td>
+            <td>${r.number}</td>
+            <td>৳${r.amount}</td>
+            <td>${formatWithdrawalDate(r.date)}</td>
+            <td><span class="status-badge status-${r.status}">${r.status}</span></td>
+            <td>
+              <button class="action-btn approve" data-id="${r.id}">✔</button>
+              <button class="action-btn reject" data-id="${r.id}">✖</button>
+              <button class="action-btn delete" data-id="${r.id}">❌</button>
+            </td>`;
+          withdrawRequestsTable.appendChild(row);
+        });
+        
+        // Add event listeners to action buttons
+        document.querySelectorAll('.approve').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const requestId = btn.getAttribute('data-id');
+            await updateWithdrawalRequest(requestId, { status: "paid" });
+            
+            // Update local data
+            const requestIndex = allRequests.findIndex(r => r.id === requestId);
+            if (requestIndex !== -1) {
+              allRequests[requestIndex].status = "paid";
+            }
+            
+            updateRequestsTable();
+            showNotification("Request approved");
+          });
+        });
+        
+        document.querySelectorAll('.reject').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const requestId = btn.getAttribute('data-id');
+            await updateWithdrawalRequest(requestId, { status: "rejected" });
+            
+            // Update local data
+            const requestIndex = allRequests.findIndex(r => r.id === requestId);
+            if (requestIndex !== -1) {
+              allRequests[requestIndex].status = "rejected";
+            }
+            
+            updateRequestsTable();
+            showNotification("Request rejected");
+          });
+        });
+        
+        document.querySelectorAll('.delete').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const requestId = btn.getAttribute('data-id');
+            await deleteWithdrawalRequest(requestId);
+            
+            // Remove from local array
+            allRequests = allRequests.filter(r => r.id !== requestId);
+            
+            updateRequestsTable();
+            showNotification("Request deleted");
+          });
+        });
+      }
+
+      function renderCountryList() {
+        countriesList.innerHTML = "";
+        
+        const searchTerm = countrySearch.value.toLowerCase();
+        let filteredCountries = countryData;
+        
+        // Filter by search term
+        if (searchTerm) {
+          filteredCountries = filteredCountries.filter(country => 
+            country.name.toLowerCase().includes(searchTerm) || 
+            country.code.toLowerCase().includes(searchTerm)
+          );
+        }
+        
+        // Filter by tier
+        if (currentTierFilter !== "all") {
+          filteredCountries = filteredCountries.filter(country => country.tier === currentTierFilter);
+        }
+        
+        // Render countries
+        filteredCountries.forEach(country => {
+          const isSelected = selectedCountryCodes.includes(country.code);
+          
+          const countryItem = document.createElement("div");
+          countryItem.className = `country-item ${isSelected ? "selected" : ""}`;
+          countryItem.innerHTML = `
+            <input type="checkbox" class="country-checkbox" data-code="${country.code}" ${isSelected ? "checked" : ""}>
+            ${country.name} (${country.code}) - <span class="tier-${country.tier}">${country.tier}</span>
+          `;
+          
+          countryItem.addEventListener("click", (e) => {
+            if (e.target.type !== "checkbox") {
+              const checkbox = countryItem.querySelector(".country-checkbox");
+              checkbox.checked = !checkbox.checked;
+              handleCountrySelection(country.code, checkbox.checked);
+            }
+          });
+          
+          const checkbox = countryItem.querySelector(".country-checkbox");
+          checkbox.addEventListener("change", () => {
+            handleCountrySelection(country.code, checkbox.checked);
+          });
+          
+          countriesList.appendChild(countryItem);
+        });
+      }
+      
+      function handleCountrySelection(countryCode, isSelected) {
+        if (isSelected) {
+          if (!selectedCountryCodes.includes(countryCode)) {
+            selectedCountryCodes.push(countryCode);
+          }
+        } else {
+          selectedCountryCodes = selectedCountryCodes.filter(code => code !== countryCode);
+        }
+        
+        renderSelectedCountries();
+      }
+      
+      function renderSelectedCountries() {
+        if (selectedCountryCodes.length === 0) {
+          selectedCountries.innerHTML = "<div style='color: #666; padding: 10px; text-align: center;'>No countries selected</div>";
+          return;
+        }
+        
+        selectedCountries.innerHTML = "";
+        selectedCountryCodes.forEach(code => {
+          const country = countryData.find(c => c.code === code);
+          if (country) {
+            const badge = document.createElement("span");
+            badge.className = "status-badge";
+            badge.textContent = `${country.name} (${code})`;
+            badge.style.margin = "0 5px 5px 0";
+            badge.style.cursor = "pointer";
+            
+            badge.addEventListener("click", () => {
+              selectedCountryCodes = selectedCountryCodes.filter(c => c !== code);
+              renderSelectedCountries();
+              renderCountryList();
+            });
+            
+            selectedCountries.appendChild(badge);
+          }
+        });
+      }
+      
+      function renderUsersList() {
+        usersList.innerHTML = "";
+        
+        const searchTerm = userSearch.value.toLowerCase();
+        let filteredUsers = allUsers;
+        
+        // Filter by search term
+        if (searchTerm) {
+          filteredUsers = filteredUsers.filter(user => 
+            (user.name && user.name.toLowerCase().includes(searchTerm)) || 
+            (user.username && user.username.toLowerCase().includes(searchTerm)) ||
+            (user.userId && user.userId.toLowerCase().includes(searchTerm))
+          );
+        }
+        
+        if (filteredUsers.length === 0) {
+          usersList.innerHTML = "<div style='color: #666; padding: 10px; text-align: center;'>No users found</div>";
+          return;
+        }
+        
+        // Render users
+        filteredUsers.forEach(user => {
+          const userItem = document.createElement("div");
+          userItem.className = `user-item ${user.isBlocked ? "blocked-user" : ""}`;
+          
+          // Get country flag URL if available
+          const flagUrl = user.country && user.country !== "Unknown" ? `https://flagcdn.com/w20/${user.country.toLowerCase()}.png` : '';
+          
+          // Calculate today's ad count and clicks
+          const today = new Date().toDateString();
+          const todayAds = user.adHistory ? user.adHistory.filter(ad => {
+            const adDate = new Date(ad.date).toDateString();
+            return adDate === today;
+          }).length : 0;
+          
+          const todayClicks = user.adClickHistory ? user.adClickHistory.filter(click => {
+            const clickDate = new Date(click.date).toDateString();
+            return clickDate === today;
+          }).length : 0;
+          
+          userItem.innerHTML = `
+            <div class="user-info">
+              <div class="user-name">${user.name || 'Unknown'} ${user.isBlocked ? '🔴' : '🟢'}</div>
+              <div class="user-id">@${user.username || 'no_username'} | ${user.userId}</div>
+              ${user.country && user.country !== "Unknown" ? `<div><img src="${flagUrl}" class="flag-icon" alt="${user.country}"> ${user.country}</div>` : '<div>Country: Not detected</div>'}
+              <div style="font-size: 12px; color: #666;">Watched: <strong>${todayAds}</strong>/${dailyTaskLimit}</div>
+              <div style="font-size: 12px; color: #666;">Clicks: <strong>${todayClicks}</strong></div>
+              <div style="font-size: 12px; color: #666;">IP: ${user.ip || 'Not available'}</div>
+              <div class="balance-display">Balance: ৳${(user.balance || 0).toFixed(2)}</div>
+            </div>
+            <div class="user-actions">
+              <button class="action-btn approve edit-balance-btn" data-user="${user.id}">💰 Edit Balance</button>
+              ${user.isBlocked ? 
+                `<button class="action-btn unblock-btn unblock-user" data-user="${user.id}">Unblock</button>` : 
+                `<button class="action-btn block-btn block-user" data-user="${user.id}">Block</button>`
+              }
+              <button class="action-btn view-details" data-user="${user.id}">👁️ Details</button>
+              <button class="action-btn delete-user-btn delete-user" data-user="${user.id}">🗑️ Delete</button>
+            </div>
+          `;
+          
+          usersList.appendChild(userItem);
+        });
+        
+        // Add event listeners to edit balance buttons
+        document.querySelectorAll('.edit-balance-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const userId = btn.getAttribute('data-user');
+            showBalanceEditModal(userId);
+          });
+        });
+        
+        // Add event listeners to block buttons
+        document.querySelectorAll('.block-user').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const userId = btn.getAttribute('data-user');
+            await blockUser(userId, true);
+          });
+        });
+        
+        // Add event listeners to unblock buttons
+        document.querySelectorAll('.unblock-user').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const userId = btn.getAttribute('data-user');
+            await blockUser(userId, false);
+          });
+        });
+        
+        // Add event listeners to view details buttons
+        document.querySelectorAll('.view-details').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const userId = btn.getAttribute('data-user');
+            showUserDetails(userId);
+          });
+        });
+        
+        // Add event listeners to delete buttons
+        document.querySelectorAll('.delete-user').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const userId = btn.getAttribute('data-user');
+            showDeleteModal(userId);
+          });
+        });
+      }
+      
+      async function blockUser(userId, block) {
+        const user = allUsers.find(u => u.id === userId);
+        if (!user) return;
+        
+        // Update user in allUsers
+        const userIndex = allUsers.findIndex(u => u.id === userId);
+        allUsers[userIndex].isBlocked = block;
+        
+        // Update in Firebase
+        await updateUserInAllUsers(userId, { isBlocked: block });
+        
+        showNotification(`User ${block ? "blocked" : "unblocked"} successfully`);
+        renderUsersList();
+      }
+      
+      function showUserDetails(userId) {
+        const user = allUsers.find(u => u.id === userId);
+        if (!user) return;
+        
+        // Remove any existing details panel
+        document.querySelectorAll('.user-details-panel').forEach(panel => panel.remove());
+        
+        // Check if details panel already exists for this user
+        const existingPanel = document.querySelector(`.user-details-panel[data-user="${userId}"]`);
+        if (existingPanel) {
+          existingPanel.remove();
+          return;
+        }
+        
+        const userItem = document.querySelector(`.view-details[data-user="${userId}"]`).closest('.user-item');
+        
+        const detailsPanel = document.createElement("div");
+        detailsPanel.className = "user-details-panel";
+        detailsPanel.setAttribute("data-user", userId);
+        
+        // Get country flag URL
+        const flagUrl = user.country && user.country !== "Unknown" ? `https://flagcdn.com/w40/${user.country.toLowerCase()}.png` : '';
+        
+        // Calculate today's ad count and clicks
+        const today = new Date().toDateString();
+        const todayAds = user.adHistory ? user.adHistory.filter(ad => {
+          const adDate = new Date(ad.date).toDateString();
+          return adDate === today;
+        }).length : 0;
+        
+        const todayClicks = user.adClickHistory ? user.adClickHistory.filter(click => {
+          const clickDate = new Date(click.date).toDateString();
+          return clickDate === today;
+        }).length : 0;
+        
+        // Calculate total ad count and clicks
+        const totalAds = user.adHistory ? user.adHistory.length : 0;
+        const totalClicks = user.adClickHistory ? user.adClickHistory.length : 0;
+        
+        // Format activity log properly
+        let activityLogHTML = '<p>No activity history</p>';
+        if (user.activityLog && user.activityLog.length > 0) {
+          activityLogHTML = `
+            <table class="user-activity-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Activity</th>
+                  <th>IP</th>
+                  <th>Country</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${user.activityLog.slice(-5).map(activity => `
+                  <tr>
+                    <td>${new Date(activity.date).toLocaleString()}</td>
+                    <td><span class="activity-badge activity-${activity.type}">${activity.type}</span></td>
+                    <td class="user-ip">${activity.ip || 'N/A'}</td>
+                    <td>${activity.country && activity.country !== "Unknown" ? `<img src="https://flagcdn.com/w20/${activity.country.toLowerCase()}.png" class="flag-icon" alt="${activity.country}"> ${activity.country}` : 'N/A'}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `;
+        }
+        
+        detailsPanel.innerHTML = `
+          <div class="user-details-header">
+            <h4>User Details</h4>
+            <span class="user-status ${user.isBlocked ? 'status-blocked' : 'status-active'}">
+              ${user.isBlocked ? 'Blocked' : 'Active'}
+            </span>
+          </div>
+          <div>
+            <strong>IP Address:</strong> <span class="user-ip">${user.ip || 'N/A'}</span>
+          </div>
+          <div>
+            <strong>Country:</strong> 
+            ${user.country && user.country !== "Unknown" && flagUrl ? `<img src="${flagUrl}" class="flag-icon" alt="${user.country}"> ${user.country}` : 'N/A'}
+          </div>
+          <div>
+            <strong>Ads Today:</strong> ${todayAds}/${dailyTaskLimit} watched, ${todayClicks} clicks
+          </div>
+          <div>
+            <strong>Total Ads:</strong> ${totalAds} watched, ${totalClicks} clicks
+          </div>
+          <div>
+            <strong>Last Login:</strong> ${user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'N/A'}
+          </div>
+          <div>
+            <strong>Registration Date:</strong> ${user.registrationDate ? new Date(user.registrationDate).toLocaleString() : 'N/A'}
+          </div>
+          
+          <h4 style="margin-top: 15px;">Activity History</h4>
+          ${activityLogHTML}
+        `;
+        
+        userItem.appendChild(detailsPanel);
+      }
+      
+      function renderWithdrawalMethods() {
+        methodsList.innerHTML = "";
+        
+        if (withdrawalMethods.length === 0) {
+          methodsList.innerHTML = "<div style='color: #666; padding: 10px; text-align: center;'>No methods added</div>";
+          return;
+        }
+        
+        withdrawalMethods.forEach((method, index) => {
+          const methodItem = document.createElement("div");
+          methodItem.className = "method-item";
+          methodItem.innerHTML = `
+            <div>
+              <strong>${method.name}</strong>
+            </div>
+            <div class="method-controls">
+              <label class="toggle-switch">
+                <input type="checkbox" ${method.enabled ? 'checked' : ''} data-index="${index}">
+                <span class="slider"></span>
+              </label>
+              <button class="action-btn delete remove-method" data-index="${index}">Remove</button>
+            </div>
+          `;
+          
+          methodsList.appendChild(methodItem);
+        });
+        
+        // Add event listeners to toggle switches
+        document.querySelectorAll('.toggle-switch input').forEach(switchEl => {
+          switchEl.addEventListener('change', (e) => {
+            const index = parseInt(e.target.getAttribute('data-index'));
+            withdrawalMethods[index].enabled = e.target.checked;
+          });
+        });
+        
+        // Add event listeners to remove buttons
+        document.querySelectorAll('.remove-method').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const index = parseInt(e.target.getAttribute('data-index'));
+            withdrawalMethods.splice(index, 1);
+            renderWithdrawalMethods();
+          });
+        });
+      }
+      
+      function updateStats() {
+        // Total users
+        totalUsersEl.textContent = allUsers.length;
+        
+        // Active today (users who watched at least one ad today)
+        const today = new Date().toDateString();
+        const activeToday = allUsers.filter(user => {
+          if (!user.adHistory) return false;
+          return user.adHistory.some(ad => {
+            const adDate = new Date(ad.date).toDateString();
+            return adDate === today;
+          });
+        }).length;
+        activeTodayEl.textContent = activeToday;
+        
+        // Total ads watched today
+        let totalAdsToday = 0;
+        allUsers.forEach(user => {
+          if (user.adHistory) {
+            const todayAds = user.adHistory.filter(ad => {
+              const adDate = new Date(ad.date).toDateString();
+              return adDate === today;
+            }).length;
+            totalAdsToday += todayAds;
+          }
+        });
+        totalAdsTodayEl.textContent = totalAdsToday;
+        
+        // Total ad clicks today
+        let totalClicksToday = 0;
+        allUsers.forEach(user => {
+          if (user.adClickHistory) {
+            const todayClicks = user.adClickHistory.filter(click => {
+              const clickDate = new Date(click.date).toDateString();
+              return clickDate === today;
+            }).length;
+            totalClicksToday += todayClicks;
+          }
+        });
+        totalClicksTodayEl.textContent = totalClicksToday;
+        
+        // Total withdrawals
+        totalWithdrawalsEl.textContent = allRequests.length;
+      }
+
+      // Admin
+      adminLoginBtn.onclick = ()=>{
+        const pass=document.getElementById("admin-password").value;
+        if(pass==="eatt7242888"){
+          isAdminLoggedIn = true;
+          adminControls.classList.remove("hidden-section");
+          // Set the current per-ad rate in the admin input
+          perAdRateInput.value = perAdRate.toFixed(2);
+          dailyTaskLimitInput.value = dailyTaskLimit;
+          showNotification("✅ Admin logged in");
+        } else {
+          showNotification("❌ Wrong password",false);
+        }
+      };
+      
+      saveSettingsBtn.onclick = async ()=>{
+        perAdRate = parseFloat(perAdRateInput.value)||0.06;
+        dailyTaskLimit = parseInt(dailyTaskLimitInput.value)||1234;
+        
+        // Save to Firebase
+        await saveSettings();
+        
+        showNotification("✅ Settings saved");
+      };
+      
+      addMethodBtn.onclick = () => {
+        const newMethodName = newMethodNameInput.value.trim();
+        if (newMethodName) {
+          withdrawalMethods.push({
+            name: newMethodName,
+            enabled: true
+          });
+          renderWithdrawalMethods();
+          newMethodNameInput.value = "";
+          showNotification("✅ Method added");
+        }
+      };
+
+      // Country search functionality
+      countrySearch.addEventListener("input", () => {
+        renderCountryList();
+      });
+      
+      // Tier filter functionality
+      tierButtons.forEach(btn => {
+        btn.addEventListener("click", () => {
+          tierButtons.forEach(b => b.classList.remove("selected"));
+          btn.classList.add("selected");
+          currentTierFilter = btn.dataset.tier;
+          renderCountryList();
+        });
+      });
+      
+      // User search functionality
+      userSearch.addEventListener("input", () => {
+        renderUsersList();
+      });
+
+      // Init
+      loadData();
+    });
+  </script>
+</body>
+</html>
