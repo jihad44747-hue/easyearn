@@ -8,14 +8,29 @@
   <!-- Telegram Web App -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-  <!-- Ad script (optional) -->
-  <script src="https://adexora.com/cdn/ads.js?id=141" defer></script>
+  <!-- Ad scripts with error handling -->
+  <script>
+  // Ad blocker detection
+  if (typeof window.adsBlocked === 'undefined') {
+      window.adsBlocked = false;
+  }
+  </script>
+  
+  <script src="https://adexora.com/cdn/ads.js?id=141" 
+          onerror="window.adsBlocked = true; console.log('Adexora failed to load')">
+  </script>
+
+  <!-- Auruads script -->
+  <script src="https://auruads.com/cdn/ads.js?app_uid=5939"
+          onerror="window.adsBlocked = true; console.log('Auruads failed to load')">
+  </script>
 
   <!-- Firebase (compat - works with older code patterns) -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
   <style>
+    /* Your existing CSS styles remain the same */
     :root{
       --primary-gradient: linear-gradient(135deg,#6a11cb 0%,#2575fc 100%);
       --card-bg: rgba(255,255,255,0.95);
@@ -81,8 +96,57 @@
     .referral-instructions ol {padding-left:20px;margin-top:8px;}
     .referral-instructions li {margin-bottom:6px;}
     
+    /* Ad container styles */
+    #adextraContainer {
+      min-height: 200px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f9f9f9;
+      border-radius: 8px;
+      margin: 10px 0;
+    }
+    
+    .ad-fallback {
+      padding: 20px;
+      text-align: center;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 10px;
+      width: 100%;
+    }
+    
+    .ad-network-indicator {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+    }
+    
     /* Animation for spin */
     @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+    
+    /* Countdown timer styles */
+    .countdown-timer {
+      font-size: 24px;
+      font-weight: bold;
+      color: #6a11cb;
+      margin: 10px 0;
+      text-align: center;
+    }
+    
+    .countdown-container {
+      background: #f8f9fa;
+      padding: 10px;
+      border-radius: 8px;
+      margin: 10px 0;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
@@ -255,7 +319,8 @@ let userData = {
   referralCode: '',
   referredBy: '',
   referrals: [],
-  referralEarnings: 0
+  referralEarnings: 0,
+  isBlocked: false
 };
 let withdrawalMethods = [];
 let allRequests = [];
@@ -263,6 +328,8 @@ let perAdRate = 0.06;
 let dailyLimit = 10;
 let userIP = "Unknown";
 let userCountry = "Unknown";
+let currentAdNetwork = 0; // 0 for Adexora, 1 for Auruads
+let adCounter = 0; // Track ad count for alternating
 
 /* ========== DOM refs ========== */
 const balanceEl = () => document.getElementById('balance');
@@ -383,6 +450,7 @@ async function loadUserFromServer(){
       userData.activityLog = data.activityLog || [];
       userData.registrationDate = data.registrationDate || new Date().toISOString();
       userData.userId = data.userId || uid;
+      userData.isBlocked = data.isBlocked || false;
       
       // Referral data
       userData.referralCode = data.referralCode || generateReferralCode();
@@ -417,7 +485,8 @@ async function loadUserFromServer(){
         referralCode: generateReferralCode(),
         referredBy: '',
         referrals: [],
-        referralEarnings: 0
+        referralEarnings: 0,
+        isBlocked: false
       };
       await db.collection('users').doc(uid).set(userData);
       console.log('New user created');
@@ -479,6 +548,22 @@ async function loadSettings(){
         { name: 'Airtel', enabled: true }
       ];
     }
+    
+    // Check country restrictions
+    const countrySettingsDoc = await db.collection('settings').doc('countryRestrictions').get();
+    if (countrySettingsDoc.exists) {
+      const countrySettings = countrySettingsDoc.data();
+      const allowedCountries = countrySettings.allowedCountries || [];
+      const restrictionEnabled = countrySettings.restrictionEnabled || false;
+      
+      if (restrictionEnabled && allowedCountries.length > 0) {
+        if (!allowedCountries.includes(userCountry)) {
+          // Block the user from watching ads
+          watchAdBtn().disabled = true;
+          showNotification('Service not available in your country.', false);
+        }
+      }
+    }
   } catch(e){
     console.warn('loadSettings error', e);
   }
@@ -499,6 +584,14 @@ async function saveUserToServer(){
 
 /* ========== UI render functions ========== */
 function renderUI(){
+  // Check if user is blocked
+  if (userData.isBlocked) {
+    watchAdBtn().disabled = true;
+    toggleWithdrawBtn().disabled = true;
+    showNotification('Your account has been blocked. Contact support.', false);
+    return;
+  }
+  
   // ডেইলি রিসেট চেক করুন
   checkAndResetDailyCounts();
   
@@ -757,10 +850,30 @@ async function onAdEarn(){
   adDoneBtn().style.display = 'none';
 
   const playAd = () => new Promise((resolve, reject) => {
-    if (typeof window.showAdexora === 'function'){
-      window.showAdexora().then(resolve).catch(reject);
-    } else {
+    // Check if ad scripts are blocked
+    if (window.adsBlocked) {
       setTimeout(resolve, 1800);
+      return;
+    }
+    
+    // Increment ad counter for alternating
+    adCounter++;
+    
+    // Alternate between ad networks: even = Adexora, odd = Auruads
+    if (adCounter % 2 === 1) {
+      // Odd count (1st, 3rd, 5th...): Adexora
+      if (typeof window.showAdexora === 'function'){
+        window.showAdexora().then(resolve).catch(reject);
+      } else {
+        setTimeout(resolve, 1800);
+      }
+    } else {
+      // Even count (2nd, 4th, 6th...): Auruads
+      if (typeof window.showAuruads === 'function'){
+        window.showAuruads().then(resolve).catch(reject);
+      } else {
+        setTimeout(resolve, 1800);
+      }
     }
   });
 
