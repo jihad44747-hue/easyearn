@@ -863,15 +863,29 @@ async function onAdEarn(){
     if (adCounter % 2 === 1) {
       // Odd count (1st, 3rd, 5th...): Adexora
       if (typeof window.showAdexora === 'function'){
+        console.log('Playing Adexora ad...');
         window.showAdexora().then(resolve).catch(reject);
       } else {
+        console.log('Adexora not available, using fallback');
         setTimeout(resolve, 1800);
       }
     } else {
       // Even count (2nd, 4th, 6th...): Auruads
       if (typeof window.showAuruads === 'function'){
-        window.showAuruads().then(resolve).catch(reject);
+        console.log('Playing Auruads ad...');
+        
+        // Auruads impression counting ঠিক করার জন্য
+        window.showAuruads()
+          .then(() => {
+            console.log('✅ Auruads ad completed successfully');
+            resolve();
+          })
+          .catch(e => {
+            console.error('❌ Auruads ad error:', e);
+            reject(e);
+          });
       } else {
+        console.log('Auruads not available, using fallback');
         setTimeout(resolve, 1800);
       }
     }
@@ -995,4 +1009,4 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 </script>
 </body>
-</html>
+  </html>
