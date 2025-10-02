@@ -433,6 +433,18 @@ let dailyLimit = 10;
 let userIP = "Unknown";
 let userCountry = "Unknown";
 
+// Cache system for better performance
+let dataCache = {
+  userData: null,
+  settings: null,
+  withdrawalRequests: null,
+  lastUpdated: 0
+};
+
+// Optimized loading states
+let isLoading = false;
+let pendingOperations = [];
+
 /* ========== DOM refs ========== */
 const balanceEl = () => document.getElementById('balance');
 const perAdEl = () => document.getElementById('perAd');
@@ -498,11 +510,11 @@ function updateResetTimeUI(){
   resetTimeEl().textContent = `Resets in ${hrs}h ${mins}m`;
 }
 
-// Ad click simulation
+// Optimized ad click simulation
 function simulateAdClick() {
   return new Promise((resolve) => {
     const clicked = Math.random() < 0.7;
-    setTimeout(() => resolve(clicked), 1000);
+    setTimeout(() => resolve(clicked), 800); // Reduced from 1000ms to 800ms
   });
 }
 
@@ -528,6 +540,23 @@ function generateShareText() {
   return `Join EasyEarn and start earning money by watching ads! Use my referral code: ${userData.referralCode}\n\n${link}`;
 }
 
+/* ========== Cache Management ========== */
+function getCachedData(key) {
+  const now = Date.now();
+  const cache = dataCache[key];
+  if (cache && (now - cache.lastUpdated) < 300000) { // 5 minutes cache
+    return cache.data;
+  }
+  return null;
+}
+
+function setCachedData(key, data) {
+  dataCache[key] = {
+    data: data,
+    lastUpdated: Date.now()
+  };
+}
+
 /* ========== Daily Reset Logic ========== */
 function checkAndResetDailyCounts() {
   const today = new Date().toDateString();
@@ -549,21 +578,44 @@ function checkAndResetDailyCounts() {
 /* ========== Load user IP & country ========== */
 async function detectLocation(){
   try {
-    const r = await fetch('https://api.ipify.org?format=json');
+    // Use faster IP detection service
+    const r = await fetch('https://api.ipify.org?format=json', { timeout: 3000 });
     const j = await r.json();
     userIP = j.ip || 'Unknown';
-    const r2 = await fetch(`https://ipapi.co/${userIP}/json/`);
-    const j2 = await r2.json();
-    userCountry = j2.country_code || 'Unknown';
+    
+    // Skip country detection if IP is unknown to save time
+    if (userIP !== 'Unknown') {
+      const r2 = await fetch(`https://ipapi.co/${userIP}/json/`, { timeout: 3000 });
+      const j2 = await r2.json();
+      userCountry = j2.country_code || 'Unknown';
+    }
   } catch(e){
     console.warn('Location detect failed', e);
     userIP = 'Unknown'; userCountry = 'Unknown';
   }
 }
 
-/* ========== Load & Save from Firestore ========== */
+/* ========== Optimized Load & Save from Firestore ========== */
 async function loadUserFromServer(){
+  if (isLoading) {
+    return new Promise(resolve => {
+      pendingOperations.push(resolve);
+    });
+  }
+  
+  isLoading = true;
+  
   try {
+    // Try cache first
+    const cachedUserData = getCachedData('userData');
+    if (cachedUserData && cachedUserData.userId === uid) {
+      console.log('Using cached user data');
+      userData = { ...userData, ...cachedUserData };
+      isLoading = false;
+      processPendingOperations();
+      return;
+    }
+
     const doc = await db.collection('users').doc(uid).get();
     if (doc.exists){
       const data = doc.data();
@@ -597,6 +649,9 @@ async function loadUserFromServer(){
       // ডেইলি রিসেট চেক করুন
       checkAndResetDailyCounts();
       
+      // Cache the data
+      setCachedData('userData', userData);
+      
       console.log('User data loaded - Balance:', userData.balance, 'Today Count:', userData.todayAdCount);
     } else {
       // নতুন ইউজার তৈরি করুন
@@ -622,12 +677,26 @@ async function loadUserFromServer(){
         claimedBonuses: []
       };
       await db.collection('users').doc(uid).set(userData);
+      
+      // Cache the data
+      setCachedData('userData', userData);
+      
       console.log('New user created');
     }
   } catch (e){
     console.error('loadUserFromServer error', e);
     showNotification('Error loading user data', false);
     userData.balance = 0;
+  } finally {
+    isLoading = false;
+    processPendingOperations();
+  }
+}
+
+function processPendingOperations() {
+  while (pendingOperations.length > 0) {
+    const resolve = pendingOperations.shift();
+    if (resolve) resolve();
   }
 }
 
@@ -798,6 +867,9 @@ async function claimReferralBonuses() {
       claimedBonuses: userData.claimedBonuses
     });
     
+    // Update cache
+    setCachedData('userData', userData);
+    
     showNotification(`Successfully claimed ৳${claimableAmount} referral bonus!`);
     renderUI();
     
@@ -809,9 +881,17 @@ async function claimReferralBonuses() {
 
 async function loadWithdrawalRequests(){
   try {
+    // Try cache first
+    const cachedRequests = getCachedData('withdrawalRequests');
+    if (cachedRequests) {
+      allRequests = cachedRequests;
+      return;
+    }
+
     const snap = await db.collection('withdrawalRequests')
       .where('userId', '==', uid)
       .orderBy('date', 'desc')
+      .limit(20) // Limit to recent 20 requests
       .get();
     
     allRequests = snap.docs.map(d => ({ 
@@ -819,12 +899,16 @@ async function loadWithdrawalRequests(){
       ...d.data(),
       date: d.data().date || new Date().toISOString()
     }));
+    
+    // Cache the data
+    setCachedData('withdrawalRequests', allRequests);
   } catch(e){
     console.error('loadWithdrawalRequests error', e);
     // Fallback: try without ordering
     try {
       const snap = await db.collection('withdrawalRequests')
         .where('userId', '==', uid)
+        .limit(20)
         .get();
       allRequests = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     } catch(err) {
@@ -836,6 +920,15 @@ async function loadWithdrawalRequests(){
 
 async function loadSettings(){
   try {
+    // Try cache first
+    const cachedSettings = getCachedData('settings');
+    if (cachedSettings) {
+      perAdRate = parseFloat(cachedSettings.perAdRate || perAdRate);
+      dailyLimit = parseInt(cachedSettings.dailyTaskLimit || dailyLimit);
+      withdrawalMethods = cachedSettings.methods || [];
+      return;
+    }
+
     const s = await db.collection('settings').doc('appSettings').get();
     if (s.exists){
       const v = s.data();
@@ -857,6 +950,13 @@ async function loadSettings(){
         { name: 'Airtel', enabled: true }
       ];
     }
+    
+    // Cache settings
+    setCachedData('settings', {
+      perAdRate: perAdRate,
+      dailyTaskLimit: dailyLimit,
+      methods: withdrawalMethods
+    });
     
     // Check country restrictions
     const countrySettingsDoc = await db.collection('settings').doc('countryRestrictions').get();
@@ -884,6 +984,10 @@ async function saveUserToServer(){
       ...userData,
       lastUpdate: new Date().toISOString()
     }, { merge: true });
+    
+    // Update cache
+    setCachedData('userData', userData);
+    
     console.log('User data saved - Balance:', userData.balance, 'Today Count:', userData.todayAdCount);
   } catch(e){
     console.error('saveUserToServer error', e);
@@ -1099,7 +1203,7 @@ function copyReferralLink() {
   shareModal().style.display = 'none';
 }
 
-/* ========== Withdraw flow ========== */
+/* ========== Optimized Withdraw flow ========== */
 async function submitWithdrawRequest(){
   const selected = document.querySelector('.method-card.selected');
   if (!selected) return showNotification('Please select a withdrawal method', false);
@@ -1172,6 +1276,12 @@ async function submitWithdrawRequest(){
       country: userCountry
     });
 
+    // Update cache
+    setCachedData('userData', userData);
+    
+    // Invalidate withdrawal requests cache
+    dataCache.withdrawalRequests = null;
+
     // Reload and update UI
     await loadWithdrawalRequests();
     renderUI();
@@ -1207,7 +1317,7 @@ async function submitWithdrawRequest(){
   }
 }
 
-/* ========== Watch ad flow ========== */
+/* ========== Optimized Watch ad flow ========== */
 async function onAdEarn(){
   // প্রথমে ডেইলি রিসেট চেক করুন
   checkAndResetDailyCounts();
@@ -1222,18 +1332,36 @@ async function onAdEarn(){
   adStatus().textContent = 'Playing ad...';
   adDoneBtn().style.display = 'none';
 
+  // Optimized ad play with timeout
   const playAd = () => new Promise((resolve, reject) => {
     // Check if ad scripts are blocked
     if (window.adsBlocked) {
-      setTimeout(resolve, 1800);
+      setTimeout(resolve, 1500); // Reduced from 1800ms
       return;
     }
     
-    // Use only Adexora
+    // Use only Adexora with timeout
+    let adCompleted = false;
+    const timeout = setTimeout(() => {
+      adCompleted = true;
+      resolve();
+    }, 5000); // 5 second timeout for ad
+    
     if (typeof window.showAdexora === 'function'){
-      window.showAdexora().then(resolve).catch(reject);
+      window.showAdexora().then(() => {
+        if (!adCompleted) {
+          clearTimeout(timeout);
+          resolve();
+        }
+      }).catch((err) => {
+        if (!adCompleted) {
+          clearTimeout(timeout);
+          reject(err);
+        }
+      });
     } else {
-      setTimeout(resolve, 1800);
+      clearTimeout(timeout);
+      setTimeout(resolve, 1500);
     }
   });
 
@@ -1273,8 +1401,12 @@ async function onAdEarn(){
       });
     }
 
-    await saveUserToServer();
-    await loadWithdrawalRequests();
+    // Update cache immediately
+    setCachedData('userData', userData);
+    
+    // Save to server in background without waiting
+    saveUserToServer().catch(e => console.error('Background save error:', e));
+    
     renderUI();
     showNotification('You earned ৳' + parseFloat(perAdRate).toFixed(2) + (adClicked ? ' +1 click' : ''));
   } catch (e){
@@ -1286,7 +1418,7 @@ async function onAdEarn(){
 
 adDoneBtn().addEventListener('click', ()=> { adModal().style.display = 'none'; });
 
-/* ========== Boot sequence ========== */
+/* ========== Optimized Boot sequence ========== */
 document.addEventListener('DOMContentLoaded', async () => {
   try {
     tg = window.Telegram.WebApp;
@@ -1311,18 +1443,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     userData.userId = uid;
   }
 
-  await detectLocation();
+  // Start location detection but don't wait for it
+  detectLocation().catch(e => console.warn('Location detection failed:', e));
 
   try {
-    await loadUserFromServer();
-    await loadSettings();
-    await loadWithdrawalRequests();
+    // Load essential data first
+    await Promise.all([
+      loadUserFromServer(),
+      loadSettings()
+    ]);
+    
+    // Load non-essential data in background
+    loadWithdrawalRequests().catch(e => console.error('Withdrawal requests load error:', e));
     
     // Check for referral code and process if available
     checkReferralCode();
     
-    // Update referral bonuses based on referred users' balances
-    await updateReferralBonuses();
+    // Update referral bonuses in background
+    updateReferralBonuses().catch(e => console.error('Referral bonus update error:', e));
     
     renderUI();
     
