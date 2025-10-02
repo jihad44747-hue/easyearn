@@ -91,6 +91,10 @@
     .referral-instructions ol {padding-left:20px;margin-top:8px;}
     .referral-instructions li {margin-bottom:6px;}
     
+    /* New styles for referral bonuses */
+    .referral-bonus-section {margin-top:16px;padding:12px;background:#f8f9fa;border-radius:8px;border:1px solid #e9ecef;}
+    .bonus-claim-btn {width:100%;margin-top:10px;}
+    
     /* Ad container styles */
     #adextraContainer {
       min-height: 200px;
@@ -141,6 +145,57 @@
       border-radius: 8px;
       margin: 10px 0;
       text-align: center;
+    }
+    
+    /* Share modal styles */
+    .share-modal {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.6);
+      z-index: 3500;
+    }
+    
+    .share-box {
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      width: 92%;
+      max-width: 360px;
+      text-align: center;
+    }
+    
+    .share-options {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin: 20px 0;
+      flex-wrap: wrap;
+    }
+    
+    .share-option {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      padding: 10px;
+      border-radius: 10px;
+      transition: all 0.2s ease;
+    }
+    
+    .share-option:hover {
+      background: #f5f5f5;
+      transform: translateY(-2px);
+    }
+    
+    .share-icon {
+      font-size: 30px;
+      margin-bottom: 8px;
     }
   </style>
 </head>
@@ -197,6 +252,7 @@
             <div class="small">Your Referral Code:</div>
             <div class="referral-code-text" id="referralCode">LOADING...</div>
             <button id="copyRefCode" class="btn btn-primary" style="margin-top:8px">📋 Copy Code</button>
+            <button id="shareRefLink" class="btn btn-success" style="margin-top:8px">🔗 Share Referral Link</button>
           </div>
           
           <div class="referral-stats">
@@ -208,14 +264,29 @@
               <div class="stat-value">৳<span id="refEarnings">0</span></div>
               <div class="stat-label">Earned</div>
             </div>
+            <div class="stat-box">
+              <div class="stat-value" id="pendingBonus">0</div>
+              <div class="stat-label">Pending Bonus</div>
+            </div>
+          </div>
+          
+          <!-- Referral Bonus Claim Section -->
+          <div class="referral-bonus-section">
+            <div class="small" style="font-weight:700">Referral Bonuses:</div>
+            <div class="small" style="margin-top:8px">
+              <div>🎁 New referral bonus: ৳1 (auto credit)</div>
+              <div>💰 10 TK balance bonus: ৳2 (claimable once per referral)</div>
+            </div>
+            <button id="claimRefBonus" class="btn btn-warning bonus-claim-btn">💰 Claim Referral Bonuses (৳<span id="claimableAmount">0</span>)</button>
           </div>
           
           <div class="referral-instructions">
             <div class="small" style="font-weight:700">How to refer:</div>
             <ol class="small">
-              <li>Share your referral code with friends</li>
-              <li>Ask them to use your code during registration</li>
-              <li>Earn ৳1 when they complete their first ad watch</li>
+              <li>Share your referral link with friends</li>
+              <li>They need to open the link and use the mini app</li>
+              <li>You get ৳1 when they join through your link</li>
+              <li>When their balance reaches ৳10, you can claim ৳2 bonus</li>
             </ol>
           </div>
         </div>
@@ -274,6 +345,41 @@
     </div>
   </div>
 
+  <!-- Share Modal -->
+  <div class="share-modal" id="shareModal">
+    <div class="share-box">
+      <h3>Share Referral Link</h3>
+      <div class="small" style="margin-top:8px">Share your referral link with friends and earn money!</div>
+      
+      <div class="share-options">
+        <div class="share-option" id="shareTelegram">
+          <div class="share-icon">📱</div>
+          <div class="small">Telegram</div>
+        </div>
+        <div class="share-option" id="shareFacebook">
+          <div class="share-icon">👥</div>
+          <div class="small">Facebook</div>
+        </div>
+        <div class="share-option" id="shareWhatsApp">
+          <div class="share-icon">💬</div>
+          <div class="small">WhatsApp</div>
+        </div>
+        <div class="share-option" id="shareTwitter">
+          <div class="share-icon">🐦</div>
+          <div class="small">Twitter</div>
+        </div>
+        <div class="share-option" id="shareCopy">
+          <div class="share-icon">📋</div>
+          <div class="small">Copy Link</div>
+        </div>
+      </div>
+      
+      <div style="margin-top:16px">
+        <button id="closeShareModal" class="btn btn-secondary">Close</button>
+      </div>
+    </div>
+  </div>
+
 <script>
 /* ========== Helpers ========== */
 function showNotification(msg, success=true, ms=2200){
@@ -315,7 +421,10 @@ let userData = {
   referredBy: '',
   referrals: [],
   referralEarnings: 0,
-  isBlocked: false
+  isBlocked: false,
+  // New referral bonus fields
+  referralBonuses: {},
+  claimedBonuses: []
 };
 let withdrawalMethods = [];
 let allRequests = [];
@@ -351,8 +460,21 @@ const joinChannelBtn = () => document.getElementById('joinChannelBtn');
 const joinGroupBtn = () => document.getElementById('joinGroupBtn');
 const referralCodeEl = () => document.getElementById('referralCode');
 const copyRefCodeBtn = () => document.getElementById('copyRefCode');
+const shareRefLinkBtn = () => document.getElementById('shareRefLink');
 const refCountEl = () => document.getElementById('refCount');
 const refEarningsEl = () => document.getElementById('refEarnings');
+const pendingBonusEl = () => document.getElementById('pendingBonus');
+const claimRefBonusBtn = () => document.getElementById('claimRefBonus');
+const claimableAmountEl = () => document.getElementById('claimableAmount');
+
+// Share modal DOM refs
+const shareModal = () => document.getElementById('shareModal');
+const shareTelegram = () => document.getElementById('shareTelegram');
+const shareFacebook = () => document.getElementById('shareFacebook');
+const shareWhatsApp = () => document.getElementById('shareWhatsApp');
+const shareTwitter = () => document.getElementById('shareTwitter');
+const shareCopy = () => document.getElementById('shareCopy');
+const closeShareModal = () => document.getElementById('closeShareModal');
 
 /* ========== Utility functions ========== */
 function formatDateField(d){
@@ -392,6 +514,18 @@ function generateReferralCode() {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return result;
+}
+
+// Generate referral link
+function generateReferralLink() {
+  const botUsername = 'easyearn11_bot'; // Your actual bot username
+  return `https://t.me/${botUsername}?start=${userData.referralCode}`;
+}
+
+// Generate share text
+function generateShareText() {
+  const link = generateReferralLink();
+  return `Join EasyEarn and start earning money by watching ads! Use my referral code: ${userData.referralCode}\n\n${link}`;
 }
 
 /* ========== Daily Reset Logic ========== */
@@ -451,6 +585,10 @@ async function loadUserFromServer(){
       userData.referrals = data.referrals || [];
       userData.referralEarnings = parseFloat(data.referralEarnings || 0);
       
+      // New referral bonus data
+      userData.referralBonuses = data.referralBonuses || {};
+      userData.claimedBonuses = data.claimedBonuses || [];
+      
       // ডেইলি কাউন্ট লোড করুন কিন্তু রিসেট চেক করুন
       userData.todayAdCount = parseInt(data.todayAdCount || 0);
       userData.todayAdClicks = parseInt(data.todayAdClicks || 0);
@@ -479,7 +617,9 @@ async function loadUserFromServer(){
         referredBy: '',
         referrals: [],
         referralEarnings: 0,
-        isBlocked: false
+        isBlocked: false,
+        referralBonuses: {},
+        claimedBonuses: []
       };
       await db.collection('users').doc(uid).set(userData);
       console.log('New user created');
@@ -488,6 +628,182 @@ async function loadUserFromServer(){
     console.error('loadUserFromServer error', e);
     showNotification('Error loading user data', false);
     userData.balance = 0;
+  }
+}
+
+// Check for referral code in URL parameters
+function checkReferralCode() {
+  try {
+    if (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) {
+      const referralCode = tg.initDataUnsafe.start_param;
+      if (referralCode && referralCode !== userData.referralCode) {
+        // This user came through a referral link
+        processReferral(referralCode);
+      }
+    }
+  } catch (e) {
+    console.error('Error checking referral code:', e);
+  }
+}
+
+// Process referral when a new user joins
+async function processReferral(referralCode) {
+  try {
+    // Find the referrer by referral code
+    const referrerQuery = await db.collection('users').where('referralCode', '==', referralCode).get();
+    
+    if (!referrerQuery.empty) {
+      const referrerDoc = referrerQuery.docs[0];
+      const referrerData = referrerDoc.data();
+      const referrerId = referrerDoc.id;
+      
+      // Add this user to referrer's referrals if not already added
+      if (!userData.referredBy) {
+        userData.referredBy = referrerId;
+        
+        // Update referrer's data
+        const updatedReferrals = [...(referrerData.referrals || []), uid];
+        const updatedBonuses = {...(referrerData.referralBonuses || {})};
+        
+        // Add bonus for this referral
+        updatedBonuses[uid] = {
+          joined: new Date().toISOString(),
+          bonus1Given: false, // ৳1 bonus for new referral
+          bonus2Eligible: false, // ৳2 bonus when user reaches 10 TK
+          bonus2Claimed: false
+        };
+        
+        await db.collection('users').doc(referrerId).update({
+          referrals: updatedReferrals,
+          referralBonuses: updatedBonuses
+        });
+        
+        // Give immediate ৳1 bonus to referrer
+        await db.collection('users').doc(referrerId).update({
+          balance: parseFloat(referrerData.balance || 0) + 1,
+          referralEarnings: parseFloat(referrerData.referralEarnings || 0) + 1
+        });
+        
+        // Mark bonus as given
+        updatedBonuses[uid].bonus1Given = true;
+        await db.collection('users').doc(referrerId).update({
+          referralBonuses: updatedBonuses
+        });
+        
+        console.log('Referral processed successfully');
+        
+        // Update local user data if current user is the referrer
+        if (uid === referrerId) {
+          userData.referrals = updatedReferrals;
+          userData.referralBonuses = updatedBonuses;
+          userData.balance += 1;
+          userData.referralEarnings += 1;
+        }
+      }
+    }
+  } catch (e) {
+    console.error('Error processing referral:', e);
+  }
+}
+
+// Check and update referral bonuses based on referred users' balances
+async function updateReferralBonuses() {
+  try {
+    if (!userData.referrals || userData.referrals.length === 0) return;
+    
+    let updated = false;
+    const updatedBonuses = {...userData.referralBonuses};
+    
+    for (const referredUserId of userData.referrals) {
+      if (updatedBonuses[referredUserId] && 
+          !updatedBonuses[referredUserId].bonus2Eligible && 
+          !updatedBonuses[referredUserId].bonus2Claimed) {
+        
+        // Check referred user's balance
+        const referredUserDoc = await db.collection('users').doc(referredUserId).get();
+        if (referredUserDoc.exists) {
+          const referredUserData = referredUserDoc.data();
+          const referredBalance = parseFloat(referredUserData.balance || 0);
+          
+          if (referredBalance >= 10) {
+            updatedBonuses[referredUserId].bonus2Eligible = true;
+            updated = true;
+          }
+        }
+      }
+    }
+    
+    if (updated) {
+      userData.referralBonuses = updatedBonuses;
+      await db.collection('users').doc(uid).update({
+        referralBonuses: updatedBonuses
+      });
+    }
+  } catch (e) {
+    console.error('Error updating referral bonuses:', e);
+  }
+}
+
+// Calculate claimable bonus amount
+function calculateClaimableBonus() {
+  let totalClaimable = 0;
+  
+  if (userData.referralBonuses) {
+    for (const referredUserId of userData.referrals) {
+      const bonus = userData.referralBonuses[referredUserId];
+      if (bonus && bonus.bonus2Eligible && !bonus.bonus2Claimed) {
+        totalClaimable += 2; // ৳2 per eligible referral
+      }
+    }
+  }
+  
+  return totalClaimable;
+}
+
+// Claim referral bonuses
+async function claimReferralBonuses() {
+  const claimableAmount = calculateClaimableBonus();
+  
+  if (claimableAmount <= 0) {
+    showNotification('No bonuses available to claim', false);
+    return;
+  }
+  
+  try {
+    const updatedBonuses = {...userData.referralBonuses};
+    let claimedCount = 0;
+    
+    for (const referredUserId of userData.referrals) {
+      const bonus = updatedBonuses[referredUserId];
+      if (bonus && bonus.bonus2Eligible && !bonus.bonus2Claimed) {
+        updatedBonuses[referredUserId].bonus2Claimed = true;
+        claimedCount++;
+      }
+    }
+    
+    // Update user balance and bonuses
+    userData.balance += claimableAmount;
+    userData.referralEarnings += claimableAmount;
+    userData.referralBonuses = updatedBonuses;
+    userData.claimedBonuses.push({
+      date: new Date().toISOString(),
+      amount: claimableAmount,
+      referrals: claimedCount
+    });
+    
+    await db.collection('users').doc(uid).update({
+      balance: userData.balance,
+      referralEarnings: userData.referralEarnings,
+      referralBonuses: updatedBonuses,
+      claimedBonuses: userData.claimedBonuses
+    });
+    
+    showNotification(`Successfully claimed ৳${claimableAmount} referral bonus!`);
+    renderUI();
+    
+  } catch (e) {
+    console.error('Error claiming referral bonuses:', e);
+    showNotification('Error claiming bonuses', false);
   }
 }
 
@@ -679,6 +995,20 @@ function renderReferralUI() {
   referralCodeEl().textContent = userData.referralCode || 'N/A';
   refCountEl().textContent = userData.referrals ? userData.referrals.length : 0;
   refEarningsEl().textContent = userData.referralEarnings ? userData.referralEarnings.toFixed(2) : '0.00';
+  
+  // Calculate and display pending bonuses
+  const claimableAmount = calculateClaimableBonus();
+  pendingBonusEl().textContent = claimableAmount;
+  claimableAmountEl().textContent = claimableAmount;
+  
+  // Enable/disable claim button
+  if (claimableAmount > 0) {
+    claimRefBonusBtn().disabled = false;
+    claimRefBonusBtn().style.opacity = '1';
+  } else {
+    claimRefBonusBtn().disabled = true;
+    claimRefBonusBtn().style.opacity = '0.7';
+  }
 }
 
 /* ========== Community and Referral Functions ========== */
@@ -703,6 +1033,10 @@ function copyReferralCode() {
   }
 }
 
+function shareReferralLink() {
+  shareModal().style.display = 'flex';
+}
+
 function fallbackCopyText(text) {
   const textArea = document.createElement("textarea");
   textArea.value = text;
@@ -711,12 +1045,58 @@ function fallbackCopyText(text) {
   textArea.select();
   try {
     document.execCommand('copy');
-    showNotification('Referral code copied to clipboard!');
+    showNotification('Copied to clipboard!');
   } catch (err) {
     console.error('Fallback: Unable to copy', err);
-    showNotification('Failed to copy code. Please copy manually.', false);
+    showNotification('Failed to copy. Please copy manually.', false);
   }
   document.body.removeChild(textArea);
+}
+
+/* ========== Share Functions ========== */
+function shareToTelegram() {
+  const text = generateShareText();
+  const url = `https://t.me/share/url?url=${encodeURIComponent(generateReferralLink())}&text=${encodeURIComponent(text)}`;
+  window.open(url, '_blank');
+  shareModal().style.display = 'none';
+  showNotification('Telegram share opened!');
+}
+
+function shareToFacebook() {
+  const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(generateReferralLink())}&quote=${encodeURIComponent('Join EasyEarn and start earning money by watching ads!')}`;
+  window.open(url, '_blank');
+  shareModal().style.display = 'none';
+  showNotification('Facebook share opened!');
+}
+
+function shareToWhatsApp() {
+  const text = generateShareText();
+  const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+  window.open(url, '_blank');
+  shareModal().style.display = 'none';
+  showNotification('WhatsApp share opened!');
+}
+
+function shareToTwitter() {
+  const text = 'Join EasyEarn and start earning money by watching ads!';
+  const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(generateReferralLink())}`;
+  window.open(url, '_blank');
+  shareModal().style.display = 'none';
+  showNotification('Twitter share opened!');
+}
+
+function copyReferralLink() {
+  const link = generateReferralLink();
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(link).then(() => {
+      showNotification('Referral link copied to clipboard!');
+    }).catch(err => {
+      fallbackCopyText(link);
+    });
+  } else {
+    fallbackCopyText(link);
+  }
+  shareModal().style.display = 'none';
 }
 
 /* ========== Withdraw flow ========== */
@@ -938,6 +1318,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadSettings();
     await loadWithdrawalRequests();
     
+    // Check for referral code and process if available
+    checkReferralCode();
+    
+    // Update referral bonuses based on referred users' balances
+    await updateReferralBonuses();
+    
     renderUI();
     
     firebaseLoading().style.display = 'none';
@@ -964,6 +1350,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     joinChannelBtn().addEventListener('click', openCommunityChannel);
     joinGroupBtn().addEventListener('click', openSupportGroup);
     copyRefCodeBtn().addEventListener('click', copyReferralCode);
+    shareRefLinkBtn().addEventListener('click', shareReferralLink);
+    claimRefBonusBtn().addEventListener('click', claimReferralBonuses);
+    
+    // Share modal event listeners
+    shareTelegram().addEventListener('click', shareToTelegram);
+    shareFacebook().addEventListener('click', shareToFacebook);
+    shareWhatsApp().addEventListener('click', shareToWhatsApp);
+    shareTwitter().addEventListener('click', shareToTwitter);
+    shareCopy().addEventListener('click', copyReferralLink);
+    closeShareModal().addEventListener('click', () => { shareModal().style.display = 'none'; });
 
     setInterval(updateResetTimeUI, 60*1000);
     
