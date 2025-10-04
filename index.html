@@ -8,24 +8,14 @@
   <!-- Telegram Web App -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-  <!-- Ad scripts with error handling -->
-  <script>
-  // Ad blocker detection
-  if (typeof window.adsBlocked === 'undefined') {
-      window.adsBlocked = false;
-  }
-  </script>
-  
-  <script src="https://adexora.com/cdn/ads.js?id=141" 
-          onerror="window.adsBlocked = true; console.log('Adexora failed to load')">
-  </script>
+  <!-- AdExora Ad Script -->
+  <script src="https://adexora.com/cdn/ads.js?id=141"></script>
 
   <!-- Firebase (compat - works with older code patterns) -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
   <style>
-    /* Your existing CSS styles remain the same */
     :root{
       --primary-gradient: linear-gradient(135deg,#6a11cb 0%,#2575fc 100%);
       --card-bg: rgba(255,255,255,0.95);
@@ -73,9 +63,14 @@
     .status-rejected{background:#f8d7da;color:#721c24}
     .notification{position:fixed;top:20px;right:20px;padding:12px 16px;border-radius:10px;color:#fff;display:none;z-index:3000}
     .firebase-loading{position:fixed;left:0;top:0;width:100%;height:100%;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.5);z-index:4000}
+    
+    /* Ad Modal Styles - from indexx.html */
     .ad-modal{position:fixed;left:0;top:0;width:100%;height:100%;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);z-index:3500}
     .ad-box{background:#fff;padding:20px;border-radius:12px;width:92%;max-width:360px;text-align:center}
     .small{font-size:13px;color:#666}
+    
+    /* Animation for spin */
+    @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
     
     /* New styles for community and referral sections */
     .community-section {display:flex;flex-direction:column;gap:12px;margin-top:12px;}
@@ -94,58 +89,6 @@
     /* New styles for referral bonuses */
     .referral-bonus-section {margin-top:16px;padding:12px;background:#f8f9fa;border-radius:8px;border:1px solid #e9ecef;}
     .bonus-claim-btn {width:100%;margin-top:10px;}
-    
-    /* Ad container styles */
-    #adextraContainer {
-      min-height: 200px;
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #f9f9f9;
-      border-radius: 8px;
-      margin: 10px 0;
-    }
-    
-    .ad-fallback {
-      padding: 20px;
-      text-align: center;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border-radius: 10px;
-      width: 100%;
-    }
-    
-    .ad-network-indicator {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: rgba(0,0,0,0.7);
-      color: white;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 10px;
-    }
-    
-    /* Animation for spin */
-    @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
-    
-    /* Countdown timer styles */
-    .countdown-timer {
-      font-size: 24px;
-      font-weight: bold;
-      color: #6a11cb;
-      margin: 10px 0;
-      text-align: center;
-    }
-    
-    .countdown-container {
-      background: #f8f9fa;
-      padding: 10px;
-      border-radius: 8px;
-      margin: 10px 0;
-      text-align: center;
-    }
     
     /* Share modal styles */
     .share-modal {
@@ -208,6 +151,18 @@
   </div>
 
   <div class="notification" id="notification"></div>
+
+  <!-- Ad Modal - from indexx.html -->
+  <div class="ad-modal" id="adModal">
+    <div class="ad-box">
+      <h3>Advertisement</h3>
+      <div style="margin:16px 0">
+        <div style="width:48px;height:48px;border:4px solid #eee;border-top-color:#6a11cb;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto"></div>
+      </div>
+      <div id="adStatus" class="small">Playing ad...</div>
+      <div style="margin-top:16px"><button id="adDoneBtn" class="btn btn-primary" style="display:none">OK</button></div>
+    </div>
+  </div>
 
   <div class="app" role="application">
     <header>
@@ -333,18 +288,6 @@
     </div>
   </div>
 
-  <!-- Ad Modal -->
-  <div class="ad-modal" id="adModal">
-    <div class="ad-box">
-      <h3>Advertisement</h3>
-      <div style="margin:16px 0">
-        <div style="width:48px;height:48px;border:4px solid #eee;border-top-color:#6a11cb;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto"></div>
-      </div>
-      <div id="adStatus" class="small">Playing ad...</div>
-      <div style="margin-top:16px"><button id="adDoneBtn" class="btn btn-primary" style="display:none">OK</button></div>
-    </div>
-  </div>
-
   <!-- Share Modal -->
   <div class="share-modal" id="shareModal">
     <div class="share-box">
@@ -390,6 +333,22 @@ function showNotification(msg, success=true, ms=2200){
   setTimeout(()=> el.style.display = 'none', ms);
 }
 
+/* ========== Local Balance Cache ========== */
+function getCachedBalance() {
+  try {
+    const b = localStorage.getItem('lastBalance');
+    return b ? parseFloat(b) : 0;
+  } catch(e) {
+    return 0;
+  }
+}
+
+function setCachedBalance(b) {
+  try {
+    localStorage.setItem('lastBalance', b.toFixed(2));
+  } catch(e) {}
+}
+
 /* ========== Firebase init ========== */
 const firebaseConfig = {
   apiKey: "AIzaSyDp49URVg2ipSBuoEBGZyqWWyc29cxAleE",
@@ -433,18 +392,6 @@ let dailyLimit = 10;
 let userIP = "Unknown";
 let userCountry = "Unknown";
 
-// Cache system for better performance
-let dataCache = {
-  userData: null,
-  settings: null,
-  withdrawalRequests: null,
-  lastUpdated: 0
-};
-
-// Optimized loading states
-let isLoading = false;
-let pendingOperations = [];
-
 /* ========== DOM refs ========== */
 const balanceEl = () => document.getElementById('balance');
 const perAdEl = () => document.getElementById('perAd');
@@ -463,6 +410,8 @@ const accountNumberInput = () => document.getElementById('accountNumber');
 const submitWithdrawBtn = () => document.getElementById('submitWithdraw');
 const historyListEl = () => document.getElementById('historyList');
 const firebaseLoading = () => document.getElementById('firebaseLoading');
+
+// Ad Modal DOM refs - from indexx.html
 const adModal = () => document.getElementById('adModal');
 const adStatus = () => document.getElementById('adStatus');
 const adDoneBtn = () => document.getElementById('adDoneBtn');
@@ -510,11 +459,11 @@ function updateResetTimeUI(){
   resetTimeEl().textContent = `Resets in ${hrs}h ${mins}m`;
 }
 
-// Optimized ad click simulation
+// Ad click simulation - from indexx.html
 function simulateAdClick() {
   return new Promise((resolve) => {
     const clicked = Math.random() < 0.7;
-    setTimeout(() => resolve(clicked), 800); // Reduced from 1000ms to 800ms
+    setTimeout(() => resolve(clicked), 1000);
   });
 }
 
@@ -540,23 +489,6 @@ function generateShareText() {
   return `Join EasyEarn and start earning money by watching ads! Use my referral code: ${userData.referralCode}\n\n${link}`;
 }
 
-/* ========== Cache Management ========== */
-function getCachedData(key) {
-  const now = Date.now();
-  const cache = dataCache[key];
-  if (cache && (now - cache.lastUpdated) < 300000) { // 5 minutes cache
-    return cache.data;
-  }
-  return null;
-}
-
-function setCachedData(key, data) {
-  dataCache[key] = {
-    data: data,
-    lastUpdated: Date.now()
-  };
-}
-
 /* ========== Daily Reset Logic ========== */
 function checkAndResetDailyCounts() {
   const today = new Date().toDateString();
@@ -578,44 +510,21 @@ function checkAndResetDailyCounts() {
 /* ========== Load user IP & country ========== */
 async function detectLocation(){
   try {
-    // Use faster IP detection service
-    const r = await fetch('https://api.ipify.org?format=json', { timeout: 3000 });
+    const r = await fetch('https://api.ipify.org?format=json');
     const j = await r.json();
     userIP = j.ip || 'Unknown';
-    
-    // Skip country detection if IP is unknown to save time
-    if (userIP !== 'Unknown') {
-      const r2 = await fetch(`https://ipapi.co/${userIP}/json/`, { timeout: 3000 });
-      const j2 = await r2.json();
-      userCountry = j2.country_code || 'Unknown';
-    }
+    const r2 = await fetch(`https://ipapi.co/${userIP}/json/`);
+    const j2 = await r2.json();
+    userCountry = j2.country_code || 'Unknown';
   } catch(e){
     console.warn('Location detect failed', e);
     userIP = 'Unknown'; userCountry = 'Unknown';
   }
 }
 
-/* ========== Optimized Load & Save from Firestore ========== */
+/* ========== Load & Save from Firestore ========== */
 async function loadUserFromServer(){
-  if (isLoading) {
-    return new Promise(resolve => {
-      pendingOperations.push(resolve);
-    });
-  }
-  
-  isLoading = true;
-  
   try {
-    // Try cache first
-    const cachedUserData = getCachedData('userData');
-    if (cachedUserData && cachedUserData.userId === uid) {
-      console.log('Using cached user data');
-      userData = { ...userData, ...cachedUserData };
-      isLoading = false;
-      processPendingOperations();
-      return;
-    }
-
     const doc = await db.collection('users').doc(uid).get();
     if (doc.exists){
       const data = doc.data();
@@ -649,9 +558,6 @@ async function loadUserFromServer(){
       // ডেইলি রিসেট চেক করুন
       checkAndResetDailyCounts();
       
-      // Cache the data
-      setCachedData('userData', userData);
-      
       console.log('User data loaded - Balance:', userData.balance, 'Today Count:', userData.todayAdCount);
     } else {
       // নতুন ইউজার তৈরি করুন
@@ -677,26 +583,14 @@ async function loadUserFromServer(){
         claimedBonuses: []
       };
       await db.collection('users').doc(uid).set(userData);
-      
-      // Cache the data
-      setCachedData('userData', userData);
-      
       console.log('New user created');
     }
   } catch (e){
     console.error('loadUserFromServer error', e);
     showNotification('Error loading user data', false);
-    userData.balance = 0;
-  } finally {
-    isLoading = false;
-    processPendingOperations();
-  }
-}
-
-function processPendingOperations() {
-  while (pendingOperations.length > 0) {
-    const resolve = pendingOperations.shift();
-    if (resolve) resolve();
+    // userData.balance = 0;  // ❌ বাদ
+    // আগের balance cache থেকে দেখান
+    userData.balance = getCachedBalance();
   }
 }
 
@@ -867,9 +761,6 @@ async function claimReferralBonuses() {
       claimedBonuses: userData.claimedBonuses
     });
     
-    // Update cache
-    setCachedData('userData', userData);
-    
     showNotification(`Successfully claimed ৳${claimableAmount} referral bonus!`);
     renderUI();
     
@@ -881,17 +772,9 @@ async function claimReferralBonuses() {
 
 async function loadWithdrawalRequests(){
   try {
-    // Try cache first
-    const cachedRequests = getCachedData('withdrawalRequests');
-    if (cachedRequests) {
-      allRequests = cachedRequests;
-      return;
-    }
-
     const snap = await db.collection('withdrawalRequests')
       .where('userId', '==', uid)
       .orderBy('date', 'desc')
-      .limit(20) // Limit to recent 20 requests
       .get();
     
     allRequests = snap.docs.map(d => ({ 
@@ -899,16 +782,12 @@ async function loadWithdrawalRequests(){
       ...d.data(),
       date: d.data().date || new Date().toISOString()
     }));
-    
-    // Cache the data
-    setCachedData('withdrawalRequests', allRequests);
   } catch(e){
     console.error('loadWithdrawalRequests error', e);
     // Fallback: try without ordering
     try {
       const snap = await db.collection('withdrawalRequests')
         .where('userId', '==', uid)
-        .limit(20)
         .get();
       allRequests = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     } catch(err) {
@@ -920,15 +799,6 @@ async function loadWithdrawalRequests(){
 
 async function loadSettings(){
   try {
-    // Try cache first
-    const cachedSettings = getCachedData('settings');
-    if (cachedSettings) {
-      perAdRate = parseFloat(cachedSettings.perAdRate || perAdRate);
-      dailyLimit = parseInt(cachedSettings.dailyTaskLimit || dailyLimit);
-      withdrawalMethods = cachedSettings.methods || [];
-      return;
-    }
-
     const s = await db.collection('settings').doc('appSettings').get();
     if (s.exists){
       const v = s.data();
@@ -950,29 +820,6 @@ async function loadSettings(){
         { name: 'Airtel', enabled: true }
       ];
     }
-    
-    // Cache settings
-    setCachedData('settings', {
-      perAdRate: perAdRate,
-      dailyTaskLimit: dailyLimit,
-      methods: withdrawalMethods
-    });
-    
-    // Check country restrictions
-    const countrySettingsDoc = await db.collection('settings').doc('countryRestrictions').get();
-    if (countrySettingsDoc.exists) {
-      const countrySettings = countrySettingsDoc.data();
-      const allowedCountries = countrySettings.allowedCountries || [];
-      const restrictionEnabled = countrySettings.restrictionEnabled || false;
-      
-      if (restrictionEnabled && allowedCountries.length > 0) {
-        if (!allowedCountries.includes(userCountry)) {
-          // Block the user from watching ads
-          watchAdBtn().disabled = true;
-          showNotification('Service not available in your country.', false);
-        }
-      }
-    }
   } catch(e){
     console.warn('loadSettings error', e);
   }
@@ -984,10 +831,6 @@ async function saveUserToServer(){
       ...userData,
       lastUpdate: new Date().toISOString()
     }, { merge: true });
-    
-    // Update cache
-    setCachedData('userData', userData);
-    
     console.log('User data saved - Balance:', userData.balance, 'Today Count:', userData.todayAdCount);
   } catch(e){
     console.error('saveUserToServer error', e);
@@ -1008,8 +851,9 @@ function renderUI(){
   // ডেইলি রিসেট চেক করুন
   checkAndResetDailyCounts();
   
-  const balance = parseFloat(userData.balance || 0);
+  const balance = parseFloat(userData.balance || getCachedBalance());
   balanceEl().textContent = balance.toFixed(2);
+  setCachedBalance(balance);
   
   perAdEl().textContent = perAdRate.toFixed(2);
   todayCountEl().textContent = userData.todayAdCount || 0;
@@ -1038,7 +882,7 @@ function renderMethods(){
     div.dataset.method = m.name.toLowerCase();
     
     const logos = {
-      'bkash': '??',
+      'bkash': '🏦',
       'nagad': '📱', 
       'rocket': '🚀',
       'banglalink': '📶',
@@ -1203,7 +1047,7 @@ function copyReferralLink() {
   shareModal().style.display = 'none';
 }
 
-/* ========== Optimized Withdraw flow ========== */
+/* ========== Withdraw flow ========== */
 async function submitWithdrawRequest(){
   const selected = document.querySelector('.method-card.selected');
   if (!selected) return showNotification('Please select a withdrawal method', false);
@@ -1276,12 +1120,6 @@ async function submitWithdrawRequest(){
       country: userCountry
     });
 
-    // Update cache
-    setCachedData('userData', userData);
-    
-    // Invalidate withdrawal requests cache
-    dataCache.withdrawalRequests = null;
-
     // Reload and update UI
     await loadWithdrawalRequests();
     renderUI();
@@ -1317,7 +1155,7 @@ async function submitWithdrawRequest(){
   }
 }
 
-/* ========== Optimized Watch ad flow ========== */
+/* ========== Watch ad flow - from indexx.html ========== */
 async function onAdEarn(){
   // প্রথমে ডেইলি রিসেট চেক করুন
   checkAndResetDailyCounts();
@@ -1332,36 +1170,11 @@ async function onAdEarn(){
   adStatus().textContent = 'Playing ad...';
   adDoneBtn().style.display = 'none';
 
-  // Optimized ad play with timeout
   const playAd = () => new Promise((resolve, reject) => {
-    // Check if ad scripts are blocked
-    if (window.adsBlocked) {
-      setTimeout(resolve, 1500); // Reduced from 1800ms
-      return;
-    }
-    
-    // Use only Adexora with timeout
-    let adCompleted = false;
-    const timeout = setTimeout(() => {
-      adCompleted = true;
-      resolve();
-    }, 5000); // 5 second timeout for ad
-    
     if (typeof window.showAdexora === 'function'){
-      window.showAdexora().then(() => {
-        if (!adCompleted) {
-          clearTimeout(timeout);
-          resolve();
-        }
-      }).catch((err) => {
-        if (!adCompleted) {
-          clearTimeout(timeout);
-          reject(err);
-        }
-      });
+      window.showAdexora().then(resolve).catch(reject);
     } else {
-      clearTimeout(timeout);
-      setTimeout(resolve, 1500);
+      setTimeout(resolve, 1800);
     }
   });
 
@@ -1401,12 +1214,8 @@ async function onAdEarn(){
       });
     }
 
-    // Update cache immediately
-    setCachedData('userData', userData);
-    
-    // Save to server in background without waiting
-    saveUserToServer().catch(e => console.error('Background save error:', e));
-    
+    await saveUserToServer();
+    await loadWithdrawalRequests();
     renderUI();
     showNotification('You earned ৳' + parseFloat(perAdRate).toFixed(2) + (adClicked ? ' +1 click' : ''));
   } catch (e){
@@ -1418,7 +1227,7 @@ async function onAdEarn(){
 
 adDoneBtn().addEventListener('click', ()=> { adModal().style.display = 'none'; });
 
-/* ========== Optimized Boot sequence ========== */
+/* ========== Boot sequence ========== */
 document.addEventListener('DOMContentLoaded', async () => {
   try {
     tg = window.Telegram.WebApp;
@@ -1443,18 +1252,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     userData.userId = uid;
   }
 
-  // Start location detection but don't wait for it
-  detectLocation().catch(e => console.warn('Location detection failed:', e));
+  await detectLocation();
 
   try {
-    // Load essential data first
-    await Promise.all([
-      loadUserFromServer(),
-      loadSettings()
-    ]);
-    
-    // Load non-essential data in background
-    loadWithdrawalRequests().catch(e => console.error('Withdrawal requests load error:', e));
+    await loadUserFromServer();
+    await loadSettings();
+    await loadWithdrawalRequests();
     
     // Check for referral code and process if available
     checkReferralCode();
