@@ -160,7 +160,7 @@
         <div style="width:48px;height:48px;border:4px solid #eee;border-top-color:#6a11cb;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto"></div>
       </div>
       <div id="adStatus" class="small">Playing ad...</div>
-      <div style="margin-top:16px"><button id="adDoneBtn" class="btn btn-primary" style="display:none">OK</button></div>
+      <div style="margin-top:16px"><button id="adDoneBtn" class="btn btn-primary">OK</button></div>
     </div>
   </div>
 
@@ -1168,7 +1168,7 @@ async function onAdEarn(){
 
   adModal().style.display = 'flex';
   adStatus().textContent = 'Playing ad...';
-  adDoneBtn().style.display = 'none';
+  adDoneBtn().style.display = 'inline-flex'; // OK button immediately visible
 
   const playAd = () => new Promise((resolve, reject) => {
     if (typeof window.showAdexora === 'function'){
@@ -1180,11 +1180,8 @@ async function onAdEarn(){
 
   try {
     await playAd();
-    const adClicked = await simulateAdClick();
     
-    adStatus().textContent = adClicked ? 'Ad clicked! +1 click' : 'Ad finished';
-    adDoneBtn().style.display = 'inline-flex';
-
+    // Immediately process the ad completion and let user close the modal
     userData.todayAdCount = (userData.todayAdCount || 0) + 1;
     userData.balance = currentBalance + parseFloat(perAdRate);
     userData.totalEarned = parseFloat(userData.totalEarned || 0) + parseFloat(perAdRate);
@@ -1202,22 +1199,54 @@ async function onAdEarn(){
       country: userCountry 
     });
 
-    if (adClicked) {
-      userData.todayAdClicks = (userData.todayAdClicks || 0) + 1;
-      userData.adClickHistory = userData.adClickHistory || [];
-      userData.adClickHistory.push({ date: new Date().toISOString() });
-      userData.activityLog.push({
-        type: 'ad_click', 
-        date: new Date().toISOString(), 
-        ip: userIP, 
-        country: userCountry 
-      });
-    }
+    // Run click simulation in background without blocking the UI
+    simulateAdClick().then(adClicked => {
+      if (adClicked) {
+        userData.todayAdClicks = (userData.todayAdClicks || 0) + 1;
+        userData.adClickHistory = userData.adClickHistory || [];
+        userData.adClickHistory.push({ date: new Date().toISOString() });
+        userData.activityLog.push({
+          type: 'ad_click', 
+          date: new Date().toISOString(), 
+          ip: userIP, 
+          country: userCountry 
+        });
+        
+        // Update status if modal is still open
+        if (adModal().style.display === 'flex') {
+          adStatus().textContent = 'Ad finished! +1 click';
+        }
+        
+        // Save updated data with click info
+        saveUserToServer().then(() => {
+          loadWithdrawalRequests().then(() => {
+            renderUI();
+            if (adModal().style.display === 'none') {
+              showNotification('You earned ৳' + parseFloat(perAdRate).toFixed(2) + ' +1 click');
+            }
+          });
+        });
+      } else {
+        // Update status if modal is still open
+        if (adModal().style.display === 'flex') {
+          adStatus().textContent = 'Ad finished!';
+        }
+        
+        // Save data without click info
+        saveUserToServer().then(() => {
+          loadWithdrawalRequests().then(() => {
+            renderUI();
+            if (adModal().style.display === 'none') {
+              showNotification('You earned ৳' + parseFloat(perAdRate).toFixed(2));
+            }
+          });
+        });
+      }
+    });
 
-    await saveUserToServer();
-    await loadWithdrawalRequests();
-    renderUI();
-    showNotification('You earned ৳' + parseFloat(perAdRate).toFixed(2) + (adClicked ? ' +1 click' : ''));
+    // Show initial notification
+    showNotification('You earned ৳' + parseFloat(perAdRate).toFixed(2));
+    
   } catch (e){
     console.error('Ad play error', e);
     showNotification('Ad failed to play', false);
@@ -1225,7 +1254,9 @@ async function onAdEarn(){
   }
 }
 
-adDoneBtn().addEventListener('click', ()=> { adModal().style.display = 'none'; });
+adDoneBtn().addEventListener('click', ()=> { 
+  adModal().style.display = 'none'; 
+});
 
 /* ========== Boot sequence ========== */
 document.addEventListener('DOMContentLoaded', async () => {
