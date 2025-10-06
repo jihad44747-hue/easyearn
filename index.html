@@ -160,7 +160,7 @@
         <div style="width:48px;height:48px;border:4px solid #eee;border-top-color:#6a11cb;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto"></div>
       </div>
       <div id="adStatus" class="small">Playing ad...</div>
-      <div style="margin-top:16px"><button id="adDoneBtn" class="btn btn-primary">OK</button></div>
+      <div style="margin-top:16px"><button id="adDoneBtn" class="btn btn-primary" style="display:none">OK</button></div>
     </div>
   </div>
 
@@ -366,6 +366,7 @@ const FieldValue = firebase.firestore.FieldValue;
 /* ========== App state ========== */
 let tg; // Telegram WebApp object
 let uid = null;
+let unsubscribeUser = null; // For real-time listener
 let userData = { 
   balance: 0, 
   adHistory: [], 
@@ -522,6 +523,53 @@ async function detectLocation(){
   }
 }
 
+/* ========== Real-time User Data Listener ========== */
+function setupUserListener() {
+  if (unsubscribeUser) {
+    unsubscribeUser(); // Unsubscribe from previous listener
+  }
+  
+  unsubscribeUser = db.collection('users').doc(uid).onSnapshot((doc) => {
+    if (doc.exists) {
+      const data = doc.data();
+      
+      // Update user data with real-time values
+      userData.balance = parseFloat(data.balance || 0);
+      userData.totalEarned = parseFloat(data.totalEarned || 0);
+      userData.totalWithdrawn = parseFloat(data.totalWithdrawn || 0);
+      userData.adHistory = data.adHistory || [];
+      userData.adClickHistory = data.adClickHistory || [];
+      userData.activityLog = data.activityLog || [];
+      userData.registrationDate = data.registrationDate || new Date().toISOString();
+      userData.userId = data.userId || uid;
+      userData.isBlocked = data.isBlocked || false;
+      
+      // Referral data
+      userData.referralCode = data.referralCode || userData.referralCode;
+      userData.referredBy = data.referredBy || '';
+      userData.referrals = data.referrals || [];
+      userData.referralEarnings = parseFloat(data.referralEarnings || 0);
+      
+      // New referral bonus data
+      userData.referralBonuses = data.referralBonuses || {};
+      userData.claimedBonuses = data.claimedBonuses || [];
+      
+      // Daily counts
+      userData.todayAdCount = parseInt(data.todayAdCount || 0);
+      userData.todayAdClicks = parseInt(data.todayAdClicks || 0);
+      userData.lastAdReset = data.lastAdReset || new Date().toDateString();
+      
+      // Update UI immediately
+      updateBalanceUI();
+      updateReferralUI();
+      
+      console.log('Real-time update - Balance:', userData.balance);
+    }
+  }, (error) => {
+    console.error('User listener error:', error);
+  });
+}
+
 /* ========== Load & Save from Firestore ========== */
 async function loadUserFromServer(){
   try {
@@ -585,11 +633,14 @@ async function loadUserFromServer(){
       await db.collection('users').doc(uid).set(userData);
       console.log('New user created');
     }
+    
+    // Setup real-time listener after initial load
+    setupUserListener();
+    
   } catch (e){
     console.error('loadUserFromServer error', e);
     showNotification('Error loading user data', false);
-    // userData.balance = 0;  // ❌ বাদ
-    // আগের balance cache থেকে দেখান
+    // Fallback to cached balance
     userData.balance = getCachedBalance();
   }
 }
@@ -612,6 +663,12 @@ function checkReferralCode() {
 // Process referral when a new user joins
 async function processReferral(referralCode) {
   try {
+    // Only process if this user hasn't been referred before
+    if (userData.referredBy) {
+      console.log('User already referred by:', userData.referredBy);
+      return;
+    }
+
     // Find the referrer by referral code
     const referrerQuery = await db.collection('users').where('referralCode', '==', referralCode).get();
     
@@ -620,49 +677,44 @@ async function processReferral(referralCode) {
       const referrerData = referrerDoc.data();
       const referrerId = referrerDoc.id;
       
-      // Add this user to referrer's referrals if not already added
-      if (!userData.referredBy) {
-        userData.referredBy = referrerId;
-        
-        // Update referrer's data
-        const updatedReferrals = [...(referrerData.referrals || []), uid];
-        const updatedBonuses = {...(referrerData.referralBonuses || {})};
-        
-        // Add bonus for this referral
-        updatedBonuses[uid] = {
-          joined: new Date().toISOString(),
-          bonus1Given: false, // ৳1 bonus for new referral
-          bonus2Eligible: false, // ৳2 bonus when user reaches 10 TK
-          bonus2Claimed: false
-        };
-        
-        await db.collection('users').doc(referrerId).update({
-          referrals: updatedReferrals,
-          referralBonuses: updatedBonuses
-        });
-        
-        // Give immediate ৳1 bonus to referrer
-        await db.collection('users').doc(referrerId).update({
-          balance: parseFloat(referrerData.balance || 0) + 1,
-          referralEarnings: parseFloat(referrerData.referralEarnings || 0) + 1
-        });
-        
-        // Mark bonus as given
-        updatedBonuses[uid].bonus1Given = true;
-        await db.collection('users').doc(referrerId).update({
-          referralBonuses: updatedBonuses
-        });
-        
-        console.log('Referral processed successfully');
-        
-        // Update local user data if current user is the referrer
-        if (uid === referrerId) {
-          userData.referrals = updatedReferrals;
-          userData.referralBonuses = updatedBonuses;
-          userData.balance += 1;
-          userData.referralEarnings += 1;
-        }
-      }
+      // Set this user as referred by
+      userData.referredBy = referrerId;
+      await db.collection('users').doc(uid).update({
+        referredBy: referrerId
+      });
+
+      // Update referrer's data
+      const updatedReferrals = [...(referrerData.referrals || []), uid];
+      const updatedBonuses = {...(referrerData.referralBonuses || {})};
+      
+      // Add bonus for this referral
+      updatedBonuses[uid] = {
+        joined: new Date().toISOString(),
+        bonus1Given: false, // ৳1 bonus for new referral
+        bonus2Eligible: false, // ৳2 bonus when user reaches 10 TK
+        bonus2Claimed: false
+      };
+      
+      await db.collection('users').doc(referrerId).update({
+        referrals: updatedReferrals,
+        referralBonuses: updatedBonuses
+      });
+      
+      // Give immediate ৳1 bonus to referrer
+      await db.collection('users').doc(referrerId).update({
+        balance: parseFloat(referrerData.balance || 0) + 1,
+        referralEarnings: parseFloat(referrerData.referralEarnings || 0) + 1
+      });
+      
+      // Mark bonus as given
+      updatedBonuses[uid].bonus1Given = true;
+      await db.collection('users').doc(referrerId).update({
+        referralBonuses: updatedBonuses
+      });
+      
+      console.log('Referral processed successfully');
+      showNotification('Welcome! You joined via referral link.');
+      
     }
   } catch (e) {
     console.error('Error processing referral:', e);
@@ -712,7 +764,7 @@ function calculateClaimableBonus() {
   let totalClaimable = 0;
   
   if (userData.referralBonuses) {
-    for (const referredUserId of userData.referrals) {
+    for (const referredUserId in userData.referralBonuses) {
       const bonus = userData.referralBonuses[referredUserId];
       if (bonus && bonus.bonus2Eligible && !bonus.bonus2Claimed) {
         totalClaimable += 2; // ৳2 per eligible referral
@@ -736,7 +788,7 @@ async function claimReferralBonuses() {
     const updatedBonuses = {...userData.referralBonuses};
     let claimedCount = 0;
     
-    for (const referredUserId of userData.referrals) {
+    for (const referredUserId in userData.referralBonuses) {
       const bonus = updatedBonuses[referredUserId];
       if (bonus && bonus.bonus2Eligible && !bonus.bonus2Claimed) {
         updatedBonuses[referredUserId].bonus2Claimed = true;
@@ -745,24 +797,18 @@ async function claimReferralBonuses() {
     }
     
     // Update user balance and bonuses
-    userData.balance += claimableAmount;
-    userData.referralEarnings += claimableAmount;
-    userData.referralBonuses = updatedBonuses;
-    userData.claimedBonuses.push({
-      date: new Date().toISOString(),
-      amount: claimableAmount,
-      referrals: claimedCount
-    });
-    
     await db.collection('users').doc(uid).update({
-      balance: userData.balance,
-      referralEarnings: userData.referralEarnings,
+      balance: userData.balance + claimableAmount,
+      referralEarnings: userData.referralEarnings + claimableAmount,
       referralBonuses: updatedBonuses,
-      claimedBonuses: userData.claimedBonuses
+      claimedBonuses: [...(userData.claimedBonuses || []), {
+        date: new Date().toISOString(),
+        amount: claimableAmount,
+        referrals: claimedCount
+      }]
     });
     
     showNotification(`Successfully claimed ৳${claimableAmount} referral bonus!`);
-    renderUI();
     
   } catch (e) {
     console.error('Error claiming referral bonuses:', e);
@@ -839,7 +885,7 @@ async function saveUserToServer(){
 }
 
 /* ========== UI render functions ========== */
-function renderUI(){
+function updateBalanceUI() {
   // Check if user is blocked
   if (userData.isBlocked) {
     watchAdBtn().disabled = true;
@@ -863,9 +909,33 @@ function renderUI(){
   const pct = ((userData.todayAdCount || 0) / dailyLimit) * 100;
   taskBarEl().style.width = `${Math.min(pct,100)}%`;
   updateResetTimeUI();
+}
+
+function updateReferralUI() {
+  referralCodeEl().textContent = userData.referralCode || 'N/A';
+  refCountEl().textContent = userData.referrals ? userData.referrals.length : 0;
+  refEarningsEl().textContent = userData.referralEarnings ? userData.referralEarnings.toFixed(2) : '0.00';
+  
+  // Calculate and display pending bonuses
+  const claimableAmount = calculateClaimableBonus();
+  pendingBonusEl().textContent = claimableAmount;
+  claimableAmountEl().textContent = claimableAmount;
+  
+  // Enable/disable claim button
+  if (claimableAmount > 0) {
+    claimRefBonusBtn().disabled = false;
+    claimRefBonusBtn().style.opacity = '1';
+  } else {
+    claimRefBonusBtn().disabled = true;
+    claimRefBonusBtn().style.opacity = '0.7';
+  }
+}
+
+function renderUI(){
+  updateBalanceUI();
   renderMethods();
   renderHistory();
-  renderReferralUI();
+  updateReferralUI();
 }
 
 function renderMethods(){
@@ -937,26 +1007,6 @@ function renderHistory(){
     div.appendChild(left); div.appendChild(right);
     container.appendChild(div);
   });
-}
-
-function renderReferralUI() {
-  referralCodeEl().textContent = userData.referralCode || 'N/A';
-  refCountEl().textContent = userData.referrals ? userData.referrals.length : 0;
-  refEarningsEl().textContent = userData.referralEarnings ? userData.referralEarnings.toFixed(2) : '0.00';
-  
-  // Calculate and display pending bonuses
-  const claimableAmount = calculateClaimableBonus();
-  pendingBonusEl().textContent = claimableAmount;
-  claimableAmountEl().textContent = claimableAmount;
-  
-  // Enable/disable claim button
-  if (claimableAmount > 0) {
-    claimRefBonusBtn().disabled = false;
-    claimRefBonusBtn().style.opacity = '1';
-  } else {
-    claimRefBonusBtn().disabled = true;
-    claimRefBonusBtn().style.opacity = '0.7';
-  }
 }
 
 /* ========== Community and Referral Functions ========== */
@@ -1168,7 +1218,7 @@ async function onAdEarn(){
 
   adModal().style.display = 'flex';
   adStatus().textContent = 'Playing ad...';
-  adDoneBtn().style.display = 'inline-flex'; // OK button immediately visible
+  adDoneBtn().style.display = 'none';
 
   const playAd = () => new Promise((resolve, reject) => {
     if (typeof window.showAdexora === 'function'){
@@ -1180,8 +1230,12 @@ async function onAdEarn(){
 
   try {
     await playAd();
+    const adClicked = await simulateAdClick();
     
-    // Immediately process the ad completion and let user close the modal
+    adStatus().textContent = adClicked ? 'Ad clicked! +1 click' : 'Ad finished';
+    adDoneBtn().style.display = 'inline-flex';
+
+    // Update user data immediately
     userData.todayAdCount = (userData.todayAdCount || 0) + 1;
     userData.balance = currentBalance + parseFloat(perAdRate);
     userData.totalEarned = parseFloat(userData.totalEarned || 0) + parseFloat(perAdRate);
@@ -1199,54 +1253,25 @@ async function onAdEarn(){
       country: userCountry 
     });
 
-    // Run click simulation in background without blocking the UI
-    simulateAdClick().then(adClicked => {
-      if (adClicked) {
-        userData.todayAdClicks = (userData.todayAdClicks || 0) + 1;
-        userData.adClickHistory = userData.adClickHistory || [];
-        userData.adClickHistory.push({ date: new Date().toISOString() });
-        userData.activityLog.push({
-          type: 'ad_click', 
-          date: new Date().toISOString(), 
-          ip: userIP, 
-          country: userCountry 
-        });
-        
-        // Update status if modal is still open
-        if (adModal().style.display === 'flex') {
-          adStatus().textContent = 'Ad finished! +1 click';
-        }
-        
-        // Save updated data with click info
-        saveUserToServer().then(() => {
-          loadWithdrawalRequests().then(() => {
-            renderUI();
-            if (adModal().style.display === 'none') {
-              showNotification('You earned ৳' + parseFloat(perAdRate).toFixed(2) + ' +1 click');
-            }
-          });
-        });
-      } else {
-        // Update status if modal is still open
-        if (adModal().style.display === 'flex') {
-          adStatus().textContent = 'Ad finished!';
-        }
-        
-        // Save data without click info
-        saveUserToServer().then(() => {
-          loadWithdrawalRequests().then(() => {
-            renderUI();
-            if (adModal().style.display === 'none') {
-              showNotification('You earned ৳' + parseFloat(perAdRate).toFixed(2));
-            }
-          });
-        });
-      }
-    });
+    if (adClicked) {
+      userData.todayAdClicks = (userData.todayAdClicks || 0) + 1;
+      userData.adClickHistory = userData.adClickHistory || [];
+      userData.adClickHistory.push({ date: new Date().toISOString() });
+      userData.activityLog.push({
+        type: 'ad_click', 
+        date: new Date().toISOString(), 
+        ip: userIP, 
+        country: userCountry 
+      });
+    }
 
-    // Show initial notification
-    showNotification('You earned ৳' + parseFloat(perAdRate).toFixed(2));
+    // Update UI immediately
+    updateBalanceUI();
     
+    // Save to server in background
+    saveUserToServer().catch(console.error);
+    
+    showNotification('You earned ৳' + parseFloat(perAdRate).toFixed(2) + (adClicked ? ' +1 click' : ''));
   } catch (e){
     console.error('Ad play error', e);
     showNotification('Ad failed to play', false);
@@ -1254,9 +1279,7 @@ async function onAdEarn(){
   }
 }
 
-adDoneBtn().addEventListener('click', ()=> { 
-  adModal().style.display = 'none'; 
-});
+adDoneBtn().addEventListener('click', ()=> { adModal().style.display = 'none'; });
 
 /* ========== Boot sequence ========== */
 document.addEventListener('DOMContentLoaded', async () => {
