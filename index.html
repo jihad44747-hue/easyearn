@@ -9,7 +9,7 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <!-- AdExora Ad Script -->
-  <script src="https://adexora.com/cdn/ads.js?id=141"></script>
+  <script src="https://adexora.com/cdn/ads.js?id=516"></script>
 
   <!-- Firebase (compat - works with older code patterns) -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -662,6 +662,8 @@ function checkReferralCode() {
 
 // Process referral when a new user joins
 async function processReferral(referralCode) {
+  console.log('Processing referral:', referralCode);
+  
   try {
     // Only process if this user hasn't been referred before
     if (userData.referredBy) {
@@ -1205,13 +1207,10 @@ async function submitWithdrawRequest(){
   }
 }
 
-/* ========== Watch ad flow - from indexx.html ========== */
+/* ========== Watch ad flow (fixed) ========== */
 async function onAdEarn(){
-  // প্রথমে ডেইলি রিসেট চেক করুন
   checkAndResetDailyCounts();
-  
-  const currentBalance = parseFloat(userData.balance || 0);
-  
+
   if ((userData.todayAdCount || 0) >= dailyLimit){
     return showNotification('You reached daily ad limit', false);
   }
@@ -1220,62 +1219,52 @@ async function onAdEarn(){
   adStatus().textContent = 'Playing ad...';
   adDoneBtn().style.display = 'none';
 
-  const playAd = () => new Promise((resolve, reject) => {
+  const playAd = () => new Promise((resolve) => {
     if (typeof window.showAdexora === 'function'){
-      window.showAdexora().then(resolve).catch(reject);
+      // যদি adexora ঠিকমতো কাজ করে, max 5 সেকেন্ডের মধ্যে OK দেখাও
+      Promise.race([
+        window.showAdexora(),
+        new Promise(r => setTimeout(r, 5000))
+      ]).then(resolve);
     } else {
-      setTimeout(resolve, 1800);
+      setTimeout(resolve, 1000);
     }
   });
 
   try {
     await playAd();
-    const adClicked = await simulateAdClick();
-    
-    adStatus().textContent = adClicked ? 'Ad clicked! +1 click' : 'Ad finished';
+    adStatus().textContent = 'Ad finished — click OK to earn!';
     adDoneBtn().style.display = 'inline-flex';
 
-    // Update user data immediately
-    userData.todayAdCount = (userData.todayAdCount || 0) + 1;
-    userData.balance = currentBalance + parseFloat(perAdRate);
-    userData.totalEarned = parseFloat(userData.totalEarned || 0) + parseFloat(perAdRate);
+    // এখন OK চাপলে পয়েন্ট যোগ হবে (delay ছাড়া)
+    adDoneBtn().onclick = async () => {
+      adModal().style.display = 'none';
 
-    userData.adHistory = userData.adHistory || [];
-    userData.activityLog = userData.activityLog || [];
-    
-    const rec = { date: new Date().toISOString(), amount: perAdRate };
-    userData.adHistory.push(rec);
-    userData.activityLog.push({
-      type: 'ad', 
-      date: new Date().toISOString(), 
-      amount: perAdRate, 
-      ip: userIP, 
-      country: userCountry 
-    });
+      userData.todayAdCount = (userData.todayAdCount || 0) + 1;
+      userData.balance = parseFloat(userData.balance || 0) + parseFloat(perAdRate);
+      userData.totalEarned = parseFloat(userData.totalEarned || 0) + parseFloat(perAdRate);
 
-    if (adClicked) {
-      userData.todayAdClicks = (userData.todayAdClicks || 0) + 1;
-      userData.adClickHistory = userData.adClickHistory || [];
-      userData.adClickHistory.push({ date: new Date().toISOString() });
+      const rec = { date: new Date().toISOString(), amount: perAdRate };
+      userData.adHistory = userData.adHistory || [];
+      userData.adHistory.push(rec);
+      userData.activityLog = userData.activityLog || [];
       userData.activityLog.push({
-        type: 'ad_click', 
-        date: new Date().toISOString(), 
-        ip: userIP, 
-        country: userCountry 
+        type: 'ad',
+        date: new Date().toISOString(),
+        amount: perAdRate,
+        ip: userIP,
+        country: userCountry
       });
-    }
 
-    // Update UI immediately
-    updateBalanceUI();
-    
-    // Save to server in background
-    saveUserToServer().catch(console.error);
-    
-    showNotification('You earned ৳' + parseFloat(perAdRate).toFixed(2) + (adClicked ? ' +1 click' : ''));
+      updateBalanceUI();
+      await saveUserToServer();
+      showNotification('✅ You earned ৳' + perAdRate.toFixed(2));
+    };
+
   } catch (e){
-    console.error('Ad play error', e);
-    showNotification('Ad failed to play', false);
+    console.error('Ad error:', e);
     adModal().style.display = 'none';
+    showNotification('Ad failed to play', false);
   }
 }
 
@@ -1313,8 +1302,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadSettings();
     await loadWithdrawalRequests();
     
-    // Check for referral code and process if available
-    checkReferralCode();
+    // Delay referral check so Telegram data loads fully
+    setTimeout(() => {
+      checkReferralCode();
+    }, 2500);
     
     // Update referral bonuses in background
     updateReferralBonuses().catch(e => console.error('Referral bonus update error:', e));
