@@ -1,3 +1,5 @@
+[file name]: admin.html
+[file content begin]
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -791,6 +793,34 @@
       background: #6c757d;
       color: white;
     }
+
+    /* New styles for referral stats */
+    .referral-stats {
+      display: flex;
+      gap: 10px;
+      margin: 10px 0;
+      flex-wrap: wrap;
+    }
+    
+    .referral-stat {
+      background: #f8f9fa;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      border: 1px solid #e9ecef;
+    }
+    
+    .referral-stat-value {
+      font-weight: 700;
+      color: #6a11cb;
+    }
+
+    /* Last active time */
+    .last-active {
+      font-size: 11px;
+      color: #666;
+      margin-top: 5px;
+    }
   </style>
 </head>
 <body>
@@ -1085,6 +1115,20 @@
         }
       }
 
+      // Calculate last active time
+      function getLastActiveTime(user) {
+        if (!user.activityLog || user.activityLog.length === 0) {
+          return user.registrationDate ? new Date(user.registrationDate).toLocaleString() : 'Never';
+        }
+        
+        const lastActivity = user.activityLog.reduce((latest, activity) => {
+          const activityDate = new Date(activity.date);
+          return activityDate > latest ? activityDate : latest;
+        }, new Date(0));
+        
+        return lastActivity.toLocaleString();
+      }
+
       // Delete user functionality
       function showDeleteModal(userId) {
         userToDelete = userId;
@@ -1206,22 +1250,7 @@
           
           allUsers = [];
           usersSnapshot.forEach(doc => {
-            const userData = doc.data();
-            allUsers.push({
-              id: doc.id,
-              name: userData.name || 'Unknown',
-              username: userData.username || 'no_username',
-              userId: userData.userId || doc.id,
-              country: userData.country || 'Unknown',
-              ip: userData.ip || 'Not available',
-              balance: userData.balance || 0,
-              isBlocked: userData.isBlocked || false,
-              adHistory: userData.adHistory || [],
-              adClickHistory: userData.adClickHistory || [],
-              lastLogin: userData.lastLogin || null,
-              registrationDate: userData.registrationDate || null,
-              activityLog: userData.activityLog || []
-            });
+            allUsers.push({id: doc.id, ...doc.data()});
           });
         } catch (error) {
           console.error("Error loading users:", error);
@@ -1546,14 +1575,29 @@
             return clickDate === today;
           }).length : 0;
           
+          // Get referral stats
+          const referralCount = user.referrals ? user.referrals.length : 0;
+          const referralEarnings = user.referralEarnings || 0;
+          
           userItem.innerHTML = `
             <div class="user-info">
-              <div class="user-name">${user.name} ${user.isBlocked ? '🔴' : '🟢'}</div>
-              <div class="user-id">@${user.username} | ${user.userId}</div>
+              <div class="user-name">${user.name || 'Unknown'} ${user.isBlocked ? '🔴' : '🟢'}</div>
+              <div class="user-id">@${user.username || 'no_username'} | ${user.userId}</div>
               ${user.country && user.country !== "Unknown" ? `<div><img src="${flagUrl}" class="flag-icon" alt="${user.country}"> ${user.country}</div>` : '<div>Country: Not detected</div>'}
+              <div class="user-ip">IP: ${user.ip || 'Not available'}</div>
+              <div class="last-active">Last Active: ${getLastActiveTime(user)}</div>
               <div style="font-size: 12px; color: #666;">Watched: <strong>${todayAds}</strong>/${dailyTaskLimit}</div>
               <div style="font-size: 12px; color: #666;">Clicks: <strong>${todayClicks}</strong></div>
-              <div style="font-size: 12px; color: #666;">IP: ${user.ip}</div>
+              <div class="referral-stats">
+                <div class="referral-stat">
+                  <div class="referral-stat-value">${referralCount}</div>
+                  <div>Referrals</div>
+                </div>
+                <div class="referral-stat">
+                  <div class="referral-stat-value">৳${referralEarnings.toFixed(2)}</div>
+                  <div>Ref Earnings</div>
+                </div>
+              </div>
               <div class="balance-display">Balance: ৳${(user.balance || 0).toFixed(2)}</div>
             </div>
             <div class="user-actions">
@@ -1665,9 +1709,15 @@
         const totalAds = user.adHistory ? user.adHistory.length : 0;
         const totalClicks = user.adClickHistory ? user.adClickHistory.length : 0;
         
-        // Format activity log properly
+        // Get referral stats
+        const referralCount = user.referrals ? user.referrals.length : 0;
+        const referralEarnings = user.referralEarnings || 0;
+        const referredBy = user.referredBy || 'Not referred';
+        
+        // Format activity log properly - show last 20 activities
         let activityLogHTML = '<p>No activity history</p>';
         if (user.activityLog && user.activityLog.length > 0) {
+          const recentActivities = user.activityLog.slice(-20).reverse();
           activityLogHTML = `
             <table class="user-activity-table">
               <thead>
@@ -1679,7 +1729,7 @@
                 </tr>
               </thead>
               <tbody>
-                ${user.activityLog.slice(-5).map(activity => `
+                ${recentActivities.map(activity => `
                   <tr>
                     <td>${new Date(activity.date).toLocaleString()}</td>
                     <td><span class="activity-badge activity-${activity.type}">${activity.type}</span></td>
@@ -1700,20 +1750,14 @@
             </span>
           </div>
           <div>
-            <strong>Name:</strong> ${user.name}
-          </div>
-          <div>
-            <strong>Username:</strong> @${user.username}
-          </div>
-          <div>
-            <strong>User ID:</strong> ${user.userId}
-          </div>
-          <div>
-            <strong>IP Address:</strong> <span class="user-ip">${user.ip}</span>
+            <strong>IP Address:</strong> <span class="user-ip">${user.ip || 'N/A'}</span>
           </div>
           <div>
             <strong>Country:</strong> 
             ${user.country && user.country !== "Unknown" && flagUrl ? `<img src="${flagUrl}" class="flag-icon" alt="${user.country}"> ${user.country}` : 'N/A'}
+          </div>
+          <div>
+            <strong>Last Active:</strong> ${getLastActiveTime(user)}
           </div>
           <div>
             <strong>Ads Today:</strong> ${todayAds}/${dailyTaskLimit} watched, ${todayClicks} clicks
@@ -1722,16 +1766,16 @@
             <strong>Total Ads:</strong> ${totalAds} watched, ${totalClicks} clicks
           </div>
           <div>
-            <strong>Balance:</strong> ৳${(user.balance || 0).toFixed(2)}
+            <strong>Referrals:</strong> ${referralCount} users, Earnings: ৳${referralEarnings.toFixed(2)}
           </div>
           <div>
-            <strong>Last Login:</strong> ${user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'N/A'}
+            <strong>Referred By:</strong> ${referredBy}
           </div>
           <div>
             <strong>Registration Date:</strong> ${user.registrationDate ? new Date(user.registrationDate).toLocaleString() : 'N/A'}
           </div>
           
-          <h4 style="margin-top: 15px;">Activity History</h4>
+          <h4 style="margin-top: 15px;">Recent Activity (Last 20)</h4>
           ${activityLogHTML}
         `;
         
@@ -1892,3 +1936,4 @@
   </script>
 </body>
 </html>
+[file content end]
