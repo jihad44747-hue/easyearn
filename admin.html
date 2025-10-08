@@ -1,3 +1,5 @@
+[file name]: admin.html
+[file content begin]
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -127,6 +129,17 @@
     .btn-primary:hover {
       transform: translateY(-2px);
       box-shadow: 0 6px 20px rgba(106, 17, 203, 0.4);
+    }
+    
+    .btn-danger {
+      background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+      color: var(--text-light);
+      box-shadow: 0 4px 15px rgba(244, 67, 54, 0.3);
+    }
+    
+    .btn-danger:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(244, 67, 54, 0.4);
     }
     
     .input-group {
@@ -791,33 +804,66 @@
       background: #6c757d;
       color: white;
     }
-
-    /* New styles for referral stats */
-    .referral-stats {
+    
+    /* Data Management Section */
+    .data-management {
+      background: white;
+      padding: 20px;
+      border-radius: 16px;
+      margin-top: 20px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+    
+    .data-management h3 {
+      color: #d32f2f;
+    }
+    
+    .data-management-options {
       display: flex;
+      flex-direction: column;
       gap: 10px;
-      margin: 10px 0;
-      flex-wrap: wrap;
+      margin-top: 15px;
     }
     
-    .referral-stat {
-      background: #f8f9fa;
-      padding: 8px 12px;
+    .data-option {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px;
+      background: #fff5f5;
       border-radius: 8px;
-      font-size: 12px;
-      border: 1px solid #e9ecef;
+      border: 1px solid #ffcccc;
     }
     
-    .referral-stat-value {
-      font-weight: 700;
-      color: #6a11cb;
+    .data-option-text {
+      flex: 1;
     }
-
-    /* Last active time */
-    .last-active {
-      font-size: 11px;
+    
+    .data-option-title {
+      font-weight: 600;
+      color: #d32f2f;
+    }
+    
+    .data-option-desc {
+      font-size: 12px;
       color: #666;
       margin-top: 5px;
+    }
+    
+    .clear-data-btn {
+      background: #f44336;
+      color: white;
+      padding: 10px 15px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    
+    .clear-data-btn:hover {
+      background: #d32f2f;
+      transform: translateY(-2px);
     }
   </style>
 </head>
@@ -847,6 +893,17 @@
       <div class="balance-edit-buttons">
         <button class="save-balance-btn" id="saveBalanceBtn">Save</button>
         <button class="cancel-balance-btn" id="cancelBalanceBtn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="clearDataModal">
+    <div class="modal-content">
+      <h3>Clear Firebase Data</h3>
+      <p id="clearDataMessage">Are you sure you want to clear all data? This action cannot be undone.</p>
+      <div class="modal-buttons">
+        <button class="confirm-delete" id="confirmClearData">Clear Data</button>
+        <button class="cancel-delete" id="cancelClearData">Cancel</button>
       </div>
     </div>
   </div>
@@ -955,6 +1012,37 @@
             </div>
             
             <div class="users-list" id="users-list"></div>
+          </div>
+          
+          <div class="data-management">
+            <h3>Data Management</h3>
+            <p style="color: #d32f2f; margin-bottom: 15px;">Warning: These actions are irreversible. Use with caution.</p>
+            
+            <div class="data-management-options">
+              <div class="data-option">
+                <div class="data-option-text">
+                  <div class="data-option-title">Clear All Withdrawal Requests</div>
+                  <div class="data-option-desc">Delete all pending and completed withdrawal requests</div>
+                </div>
+                <button class="clear-data-btn" id="clearWithdrawalsBtn">Clear</button>
+              </div>
+              
+              <div class="data-option">
+                <div class="data-option-text">
+                  <div class="data-option-title">Clear All Users</div>
+                  <div class="data-option-desc">Delete all user accounts and their data</div>
+                </div>
+                <button class="clear-data-btn" id="clearUsersBtn">Clear</button>
+              </div>
+              
+              <div class="data-option">
+                <div class="data-option-text">
+                  <div class="data-option-title">Clear All Firebase Data</div>
+                  <div class="data-option-desc">Delete ALL data including users, requests, and settings</div>
+                </div>
+                <button class="clear-data-btn" id="clearAllDataBtn">Clear All</button>
+              </div>
+            </div>
           </div>
           
           <button class="btn btn-primary" id="save-settings">
@@ -1077,6 +1165,13 @@
       const balanceEditInput = document.getElementById("balanceEditInput");
       const saveBalanceBtn = document.getElementById("saveBalanceBtn");
       const cancelBalanceBtn = document.getElementById("cancelBalanceBtn");
+      const clearDataModal = document.getElementById("clearDataModal");
+      const confirmClearDataBtn = document.getElementById("confirmClearData");
+      const cancelClearDataBtn = document.getElementById("cancelClearData");
+      const clearDataMessage = document.getElementById("clearDataMessage");
+      const clearWithdrawalsBtn = document.getElementById("clearWithdrawalsBtn");
+      const clearUsersBtn = document.getElementById("clearUsersBtn");
+      const clearAllDataBtn = document.getElementById("clearAllDataBtn");
       
       // Stats elements
       const totalUsersEl = document.getElementById("total-users");
@@ -1095,6 +1190,7 @@
       let withdrawalMethods = [];
       let userToDelete = null;
       let userToEditBalance = null;
+      let clearDataAction = null;
 
       // Format date as DD-MM-YYYY
       function formatWithdrawalDate(dateString) {
@@ -1111,20 +1207,6 @@
         } catch (e) {
           return 'Invalid Date';
         }
-      }
-
-      // Calculate last active time
-      function getLastActiveTime(user) {
-        if (!user.activityLog || user.activityLog.length === 0) {
-          return user.registrationDate ? new Date(user.registrationDate).toLocaleString() : 'Never';
-        }
-        
-        const lastActivity = user.activityLog.reduce((latest, activity) => {
-          const activityDate = new Date(activity.date);
-          return activityDate > latest ? activityDate : latest;
-        }, new Date(0));
-        
-        return lastActivity.toLocaleString();
       }
 
       // Delete user functionality
@@ -1180,6 +1262,134 @@
         }
       }
 
+      // Data clearing functionality
+      function showClearDataModal(action) {
+        clearDataAction = action;
+        
+        let message = "";
+        switch(action) {
+          case "withdrawals":
+            message = "Are you sure you want to delete all withdrawal requests? This action cannot be undone.";
+            break;
+          case "users":
+            message = "Are you sure you want to delete all users? This will remove all user accounts and their data.";
+            break;
+          case "all":
+            message = "Are you sure you want to delete ALL data? This will remove users, withdrawal requests, and settings. This action cannot be undone.";
+            break;
+        }
+        
+        clearDataMessage.textContent = message;
+        clearDataModal.style.display = "flex";
+      }
+
+      async function clearWithdrawalRequests() {
+        try {
+          const requestsSnapshot = await db.collection("withdrawalRequests").get();
+          const batch = db.batch();
+          
+          requestsSnapshot.forEach(doc => {
+            batch.delete(doc.ref);
+          });
+          
+          await batch.commit();
+          allRequests = [];
+          updateRequestsTable();
+          showNotification("All withdrawal requests cleared successfully");
+        } catch (error) {
+          console.error("Error clearing withdrawal requests:", error);
+          showNotification("Error clearing withdrawal requests", false);
+        }
+      }
+
+      async function clearAllUsers() {
+        try {
+          const usersSnapshot = await db.collection("users").get();
+          const batch = db.batch();
+          
+          usersSnapshot.forEach(doc => {
+            batch.delete(doc.ref);
+          });
+          
+          await batch.commit();
+          allUsers = [];
+          renderUsersList();
+          updateStats();
+          showNotification("All users cleared successfully");
+        } catch (error) {
+          console.error("Error clearing users:", error);
+          showNotification("Error clearing users", false);
+        }
+      }
+
+      async function clearAllData() {
+        try {
+          // Clear users
+          const usersSnapshot = await db.collection("users").get();
+          const usersBatch = db.batch();
+          usersSnapshot.forEach(doc => {
+            usersBatch.delete(doc.ref);
+          });
+          await usersBatch.commit();
+          
+          // Clear withdrawal requests
+          const requestsSnapshot = await db.collection("withdrawalRequests").get();
+          const requestsBatch = db.batch();
+          requestsSnapshot.forEach(doc => {
+            requestsBatch.delete(doc.ref);
+          });
+          await requestsBatch.commit();
+          
+          // Reset settings to defaults
+          await db.collection("settings").doc("appSettings").set({
+            perAdRate: 0.06,
+            dailyTaskLimit: 1234
+          });
+          
+          await db.collection("settings").doc("countryRestrictions").set({
+            allowedCountries: [],
+            restrictionEnabled: false
+          });
+          
+          // Reset withdrawal methods to defaults
+          const defaultMethods = [
+            { name: "bKash", enabled: true },
+            { name: "Nagad", enabled: true },
+            { name: "Rocket", enabled: true },
+            { name: "Banglalink", enabled: true },
+            { name: "Grameenphone", enabled: true },
+            { name: "Robi", enabled: true },
+            { name: "Airtel", enabled: true }
+          ];
+          
+          await db.collection("settings").doc("withdrawalMethods").set({
+            methods: defaultMethods
+          });
+          
+          // Update local state
+          allUsers = [];
+          allRequests = [];
+          withdrawalMethods = defaultMethods;
+          selectedCountryCodes = [];
+          perAdRate = 0.06;
+          dailyTaskLimit = 1234;
+          
+          // Update UI
+          renderUsersList();
+          updateRequestsTable();
+          renderWithdrawalMethods();
+          renderSelectedCountries();
+          perAdRateInput.value = perAdRate;
+          dailyTaskLimitInput.value = dailyTaskLimit;
+          updateStats();
+          
+          showNotification("All data cleared successfully");
+        } catch (error) {
+          console.error("Error clearing all data:", error);
+          showNotification("Error clearing all data", false);
+        }
+      }
+
       // Event listeners for delete modal
       confirmDeleteBtn.addEventListener("click", () => {
         if (userToDelete) {
@@ -1220,11 +1430,56 @@
         }
       });
 
+      // Event listeners for clear data modal
+      confirmClearDataBtn.addEventListener("click", () => {
+        if (clearDataAction) {
+          switch(clearDataAction) {
+            case "withdrawals":
+              clearWithdrawalRequests();
+              break;
+            case "users":
+              clearAllUsers();
+              break;
+            case "all":
+              clearAllData();
+              break;
+          }
+          clearDataModal.style.display = "none";
+          clearDataAction = null;
+        }
+      });
+
+      cancelClearDataBtn.addEventListener("click", () => {
+        clearDataModal.style.display = "none";
+        clearDataAction = null;
+      });
+
+      // Close clear data modal when clicking outside
+      clearDataModal.addEventListener("click", (e) => {
+        if (e.target === clearDataModal) {
+          clearDataModal.style.display = "none";
+          clearDataAction = null;
+        }
+      });
+
       // Allow pressing Enter to save balance
       balanceEditInput.addEventListener("keypress", (e) => {
         if (e.key === "Enter") {
           saveUserBalance();
         }
+      });
+
+      // Event listeners for clear data buttons
+      clearWithdrawalsBtn.addEventListener("click", () => {
+        showClearDataModal("withdrawals");
+      });
+
+      clearUsersBtn.addEventListener("click", () => {
+        showClearDataModal("users");
+      });
+
+      clearAllDataBtn.addEventListener("click", () => {
+        showClearDataModal("all");
       });
 
       async function loadAllRequests() {
@@ -1573,29 +1828,14 @@
             return clickDate === today;
           }).length : 0;
           
-          // Get referral stats
-          const referralCount = user.referrals ? user.referrals.length : 0;
-          const referralEarnings = user.referralEarnings || 0;
-          
           userItem.innerHTML = `
             <div class="user-info">
               <div class="user-name">${user.name || 'Unknown'} ${user.isBlocked ? '🔴' : '🟢'}</div>
               <div class="user-id">@${user.username || 'no_username'} | ${user.userId}</div>
               ${user.country && user.country !== "Unknown" ? `<div><img src="${flagUrl}" class="flag-icon" alt="${user.country}"> ${user.country}</div>` : '<div>Country: Not detected</div>'}
-              <div class="user-ip">IP: ${user.ip || 'Not available'}</div>
-              <div class="last-active">Last Active: ${getLastActiveTime(user)}</div>
               <div style="font-size: 12px; color: #666;">Watched: <strong>${todayAds}</strong>/${dailyTaskLimit}</div>
               <div style="font-size: 12px; color: #666;">Clicks: <strong>${todayClicks}</strong></div>
-              <div class="referral-stats">
-                <div class="referral-stat">
-                  <div class="referral-stat-value">${referralCount}</div>
-                  <div>Referrals</div>
-                </div>
-                <div class="referral-stat">
-                  <div class="referral-stat-value">৳${referralEarnings.toFixed(2)}</div>
-                  <div>Ref Earnings</div>
-                </div>
-              </div>
+              <div style="font-size: 12px; color: #666;">IP: ${user.ip || 'Not available'}</div>
               <div class="balance-display">Balance: ৳${(user.balance || 0).toFixed(2)}</div>
             </div>
             <div class="user-actions">
@@ -1707,15 +1947,9 @@
         const totalAds = user.adHistory ? user.adHistory.length : 0;
         const totalClicks = user.adClickHistory ? user.adClickHistory.length : 0;
         
-        // Get referral stats
-        const referralCount = user.referrals ? user.referrals.length : 0;
-        const referralEarnings = user.referralEarnings || 0;
-        const referredBy = user.referredBy || 'Not referred';
-        
-        // Format activity log properly - show last 20 activities
+        // Format activity log properly
         let activityLogHTML = '<p>No activity history</p>';
         if (user.activityLog && user.activityLog.length > 0) {
-          const recentActivities = user.activityLog.slice(-20).reverse();
           activityLogHTML = `
             <table class="user-activity-table">
               <thead>
@@ -1727,7 +1961,7 @@
                 </tr>
               </thead>
               <tbody>
-                ${recentActivities.map(activity => `
+                ${user.activityLog.slice(-5).map(activity => `
                   <tr>
                     <td>${new Date(activity.date).toLocaleString()}</td>
                     <td><span class="activity-badge activity-${activity.type}">${activity.type}</span></td>
@@ -1755,25 +1989,19 @@
             ${user.country && user.country !== "Unknown" && flagUrl ? `<img src="${flagUrl}" class="flag-icon" alt="${user.country}"> ${user.country}` : 'N/A'}
           </div>
           <div>
-            <strong>Last Active:</strong> ${getLastActiveTime(user)}
-          </div>
-          <div>
             <strong>Ads Today:</strong> ${todayAds}/${dailyTaskLimit} watched, ${todayClicks} clicks
           </div>
           <div>
             <strong>Total Ads:</strong> ${totalAds} watched, ${totalClicks} clicks
           </div>
           <div>
-            <strong>Referrals:</strong> ${referralCount} users, Earnings: ৳${referralEarnings.toFixed(2)}
-          </div>
-          <div>
-            <strong>Referred By:</strong> ${referredBy}
+            <strong>Last Login:</strong> ${user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'N/A'}
           </div>
           <div>
             <strong>Registration Date:</strong> ${user.registrationDate ? new Date(user.registrationDate).toLocaleString() : 'N/A'}
           </div>
           
-          <h4 style="margin-top: 15px;">Recent Activity (Last 20)</h4>
+          <h4 style="margin-top: 15px;">Activity History</h4>
           ${activityLogHTML}
         `;
         
