@@ -140,6 +140,59 @@
       font-size: 30px;
       margin-bottom: 8px;
     }
+
+    /* Ad status styles */
+    .ad-status-indicator {
+      padding: 8px 12px;
+      border-radius: 8px;
+      margin: 10px 0;
+      text-align: center;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .ad-status-ready {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .ad-status-warning {
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeaa7;
+    }
+
+    .ad-status-error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    /* Ad info section */
+    .ad-info-section {
+      background: #f8f9fa;
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 10px;
+      border-left: 4px solid #6a11cb;
+    }
+
+    .ad-info-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+      font-size: 13px;
+    }
+
+    .ad-info-label {
+      color: #666;
+    }
+
+    .ad-info-value {
+      font-weight: 600;
+      color: #333;
+    }
   </style>
 </head>
 <body>
@@ -177,12 +230,33 @@
     <div class="content">
       <div class="section">
         <h3>Watch Ads & Earn</h3>
+        
+        <!-- Add ad status indicator -->
+        <div id="adStatusIndicator" class="ad-status-indicator ad-status-ready">
+          ✅ Ad system ready
+        </div>
+        
         <div style="margin-top:12px">
           <button id="watchAdBtn" class="btn btn-primary">👁️ Watch Ad & Earn ৳<span id="perAd">0.06</span></button>
         </div>
+        
+        <!-- Add ad info section -->
+        <div class="ad-info-section">
+          <div class="ad-info-item">
+            <span class="ad-info-label">Minimum watch time:</span>
+            <span class="ad-info-value" id="minWatchTime">6 seconds</span>
+          </div>
+          <div class="ad-info-item">
+            <span class="ad-info-label">Today's ads:</span>
+            <span class="ad-info-value"><span id="todayCount">0</span>/<span id="dailyLimit">10</span></span>
+          </div>
+          <div class="ad-info-item">
+            <span class="ad-info-label">Ad clicks:</span>
+            <span class="ad-info-value" id="todayClicks">0</span>
+          </div>
+        </div>
+        
         <div class="task-info">
-          <div>Watched: <strong id="todayCount">0</strong>/<strong id="dailyLimit">10</strong></div>
-          <div>Clicks: <strong id="todayClicks">0</strong></div>
           <div id="resetTime" class="small">Resets in 24h</div>
         </div>
         <div class="task-progress" aria-hidden="true"><div id="taskBar" class="task-bar"></div></div>
@@ -267,14 +341,14 @@
           <div style="margin-top:12px">
             <div class="small">Select Amount</div>
             <div class="amount-grid" id="amountGrid">
-              <button class="amount-btn" data-amount="200">৳200</button>
-              <button class="amount-btn" data-amount="500">৳500</button>
-              <button class="amount-btn" data-amount="1000">৳1000</button>
+              <button class="amount-btn" data-amount="20">৳20</button>
+              <button class="amount-btn" data-amount="50">৳50</button>
+              <button class="amount-btn" data-amount="100">৳100</button>
               <button class="amount-btn" data-amount="200">৳200</button>
               <button class="amount-btn" data-amount="300">৳300</button>
               <button class="amount-btn" data-amount="500">৳500</button>
             </div>
-            <input id="withdrawAmount" type="number" class="input" placeholder="Or enter custom amount (200 - 500)" min="200" max="500" style="margin-top:8px">
+            <input id="withdrawAmount" type="number" class="input" placeholder="Or enter custom amount (20 - 500)" min="20" max="500" style="margin-top:8px">
           </div>
 
           <div style="margin-top:14px">
@@ -393,6 +467,12 @@ let dailyLimit = 10;
 let userIP = "Unknown";
 let userCountry = "Unknown";
 
+/* ========== Ad Blocker Detection & Ad Load Status ========== */
+let adBlockerDetected = false;
+let adScriptLoaded = false;
+let minAdWatchTime = 6; // seconds - will be loaded from admin settings
+let adLoadTimeout = 8000; // ms - will be loaded from admin settings
+
 /* ========== DOM refs ========== */
 const balanceEl = () => document.getElementById('balance');
 const perAdEl = () => document.getElementById('perAd');
@@ -437,6 +517,10 @@ const shareWhatsApp = () => document.getElementById('shareWhatsApp');
 const shareTwitter = () => document.getElementById('shareTwitter');
 const shareCopy = () => document.getElementById('shareCopy');
 const closeShareModal = () => document.getElementById('closeShareModal');
+
+// Ad status DOM refs
+const adStatusIndicator = () => document.getElementById('adStatusIndicator');
+const minWatchTimeEl = () => document.getElementById('minWatchTime');
 
 /* ========== Utility functions ========== */
 function formatDateField(d){
@@ -488,6 +572,208 @@ function generateReferralLink() {
 function generateShareText() {
   const link = generateReferralLink();
   return `Join EasyEarn and start earning money by watching ads! Use my referral code: ${userData.referralCode}\n\n${link}`;
+}
+
+/* ========== Ad Blocker Detection & Safety Functions ========== */
+// Check if ad blocker is detected
+function checkAdBlocker() {
+  return new Promise((resolve) => {
+    const ad = document.createElement('div');
+    ad.innerHTML = '&nbsp;';
+    ad.className = 'adsbox';
+    ad.style.position = 'absolute';
+    ad.style.left = '-9999px';
+    ad.style.top = '-9999px';
+    ad.style.width = '1px';
+    ad.style.height = '1px';
+    document.body.appendChild(ad);
+    
+    setTimeout(() => {
+      const detected = ad.offsetHeight === 0 || ad.offsetWidth === 0;
+      document.body.removeChild(ad);
+      adBlockerDetected = detected;
+      resolve(detected);
+    }, 100);
+  });
+}
+
+// Check if ad script is loaded properly
+function checkAdScript() {
+  return typeof window.showAdexora === 'function';
+}
+
+// Enhanced ad watching function with blocker detection and load checks
+async function watchAdWithSafety() {
+  // Check daily reset first
+  checkAndResetDailyCounts();
+  
+  const currentBalance = parseFloat(userData.balance || 0);
+  
+  if ((userData.todayAdCount || 0) >= dailyLimit) {
+    showNotification('You reached daily ad limit', false);
+    return false;
+  }
+
+  // Show ad modal
+  adModal().style.display = 'flex';
+  adStatus().textContent = '🔍 Checking ad availability...';
+  adDoneBtn().style.display = 'none';
+
+  try {
+    // Step 1: Check for ad blocker
+    adStatus().textContent = '🛡️ Checking for ad blocker...';
+    const hasAdBlocker = await checkAdBlocker();
+    
+    if (hasAdBlocker) {
+      adStatus().textContent = '🚫 Ad blocker detected! Please disable it.';
+      adDoneBtn().style.display = 'inline-flex';
+      showNotification('Ad blocker detected. Please disable it to watch ads.', false);
+      return false;
+    }
+
+    // Step 2: Check if ad script is loaded
+    adStatus().textContent = '⏳ Loading ad script...';
+    adScriptLoaded = checkAdScript();
+    
+    let waited = 0;
+    while (!adScriptLoaded && waited < adLoadTimeout) {
+      await new Promise(r => setTimeout(r, 200));
+      waited += 200;
+      adScriptLoaded = checkAdScript();
+    }
+
+    if (!adScriptLoaded) {
+      adStatus().textContent = '❌ Ad failed to load. Please try again.';
+      adDoneBtn().style.display = 'inline-flex';
+      showNotification('Ad failed to load. Please try again.', false);
+      return false;
+    }
+
+    // Step 3: Start ad and measure duration
+    adStatus().textContent = '🎬 Playing advertisement...';
+    const startTime = Date.now();
+    let adCompleted = false;
+    
+    try {
+      await window.showAdexora();
+      adCompleted = true;
+    } catch (error) {
+      adCompleted = false;
+      console.error('Ad play error:', error);
+    }
+    
+    const duration = Date.now() - startTime;
+    const durationSeconds = Math.floor(duration / 1000);
+
+    // Step 4: Check if ad was watched for minimum required time
+    if (adCompleted && duration >= minAdWatchTime * 1000) {
+      // Ad was completed successfully and watched for required time
+      adStatus().textContent = `✅ Ad completed! (${durationSeconds}s)`;
+      adDoneBtn().style.display = 'inline-flex';
+
+      // Update user data
+      userData.todayAdCount = (userData.todayAdCount || 0) + 1;
+      userData.balance = currentBalance + parseFloat(perAdRate);
+      userData.totalEarned = parseFloat(userData.totalEarned || 0) + parseFloat(perAdRate);
+
+      userData.adHistory = userData.adHistory || [];
+      userData.activityLog = userData.activityLog || [];
+      
+      const rec = { date: new Date().toISOString(), amount: perAdRate, duration: durationSeconds };
+      userData.adHistory.push(rec);
+      userData.activityLog.push({
+        type: 'ad', 
+        date: new Date().toISOString(), 
+        amount: perAdRate, 
+        duration: durationSeconds,
+        ip: userIP, 
+        country: userCountry 
+      });
+
+      // Simulate ad click (70% chance)
+      const adClicked = await simulateAdClick();
+      if (adClicked) {
+        userData.todayAdClicks = (userData.todayAdClicks || 0) + 1;
+        userData.adClickHistory = userData.adClickHistory || [];
+        userData.adClickHistory.push({ date: new Date().toISOString() });
+        userData.activityLog.push({
+          type: 'ad_click', 
+          date: new Date().toISOString(), 
+          ip: userIP, 
+          country: userCountry 
+        });
+      }
+
+      // Update UI immediately
+      updateBalanceUI();
+      
+      // Save to server in background
+      saveUserToServer().catch(console.error);
+      
+      showNotification(`You earned ৳${parseFloat(perAdRate).toFixed(2)}! (${durationSeconds}s)` + (adClicked ? ' +1 click' : ''));
+      return true;
+      
+    } else {
+      // Ad not completed or not watched long enough
+      let reason = '';
+      if (!adCompleted) {
+        reason = 'Ad was not completed properly';
+      } else {
+        reason = `Ad watched for only ${durationSeconds}s (minimum ${minAdWatchTime}s required)`;
+      }
+      
+      adStatus().textContent = `⚠️ ${reason}`;
+      adDoneBtn().style.display = 'inline-flex';
+      showNotification(reason + '. No reward given.', false);
+      return false;
+    }
+    
+  } catch (error) {
+    console.error('Ad safety check error:', error);
+    adStatus().textContent = '❌ Error playing ad. Please try again.';
+    adDoneBtn().style.display = 'inline-flex';
+    showNotification('Error playing ad. Please try again.', false);
+    return false;
+  }
+}
+
+// Update ad status indicator
+function updateAdStatusIndicator() {
+  const indicator = adStatusIndicator();
+  const minWatchTime = minWatchTimeEl();
+  
+  if (!adScriptLoaded) {
+    indicator.className = 'ad-status-indicator ad-status-warning';
+    indicator.textContent = '⚠️ Ad system loading...';
+  } else if (adBlockerDetected) {
+    indicator.className = 'ad-status-indicator ad-status-error';
+    indicator.textContent = '🚫 Ad blocker detected! Please disable it.';
+  } else {
+    indicator.className = 'ad-status-indicator ad-status-ready';
+    indicator.textContent = `✅ Ad system ready (min ${minAdWatchTime}s)`;
+  }
+  
+  minWatchTime.textContent = `${minAdWatchTime} seconds`;
+}
+
+// Load ad-related settings from admin
+async function loadAdSettings() {
+  try {
+    const settingsDoc = await db.collection('settings').doc('adSettings').get();
+    if (settingsDoc.exists) {
+      const settings = settingsDoc.data();
+      minAdWatchTime = settings.minAdWatchTime || 6;
+      adLoadTimeout = settings.adLoadTimeout || 8000;
+      
+      // Update perAdRate from main settings too
+      const mainSettings = await db.collection('settings').doc('appSettings').get();
+      if (mainSettings.exists) {
+        perAdRate = parseFloat(mainSettings.data().perAdRate || perAdRate);
+      }
+    }
+  } catch (error) {
+    console.warn('Error loading ad settings:', error);
+  }
 }
 
 /* ========== Daily Reset Logic ========== */
@@ -1205,78 +1491,10 @@ async function submitWithdrawRequest(){
   }
 }
 
-/* ========== Watch ad flow - from indexx.html ========== */
-async function onAdEarn(){
-  // প্রথমে ডেইলি রিসেট চেক করুন
-  checkAndResetDailyCounts();
-  
-  const currentBalance = parseFloat(userData.balance || 0);
-  
-  if ((userData.todayAdCount || 0) >= dailyLimit){
-    return showNotification('You reached daily ad limit', false);
-  }
-
-  adModal().style.display = 'flex';
-  adStatus().textContent = 'Playing ad...';
-  adDoneBtn().style.display = 'none';
-
-  const playAd = () => new Promise((resolve, reject) => {
-    if (typeof window.showAdexora === 'function'){
-      window.showAdexora().then(resolve).catch(reject);
-    } else {
-      setTimeout(resolve, 1800);
-    }
-  });
-
-  try {
-    await playAd();
-    const adClicked = await simulateAdClick();
-    
-    adStatus().textContent = adClicked ? 'Ad clicked! +1 click' : 'Ad finished';
-    adDoneBtn().style.display = 'inline-flex';
-
-    // Update user data immediately
-    userData.todayAdCount = (userData.todayAdCount || 0) + 1;
-    userData.balance = currentBalance + parseFloat(perAdRate);
-    userData.totalEarned = parseFloat(userData.totalEarned || 0) + parseFloat(perAdRate);
-
-    userData.adHistory = userData.adHistory || [];
-    userData.activityLog = userData.activityLog || [];
-    
-    const rec = { date: new Date().toISOString(), amount: perAdRate };
-    userData.adHistory.push(rec);
-    userData.activityLog.push({
-      type: 'ad', 
-      date: new Date().toISOString(), 
-      amount: perAdRate, 
-      ip: userIP, 
-      country: userCountry 
-    });
-
-    if (adClicked) {
-      userData.todayAdClicks = (userData.todayAdClicks || 0) + 1;
-      userData.adClickHistory = userData.adClickHistory || [];
-      userData.adClickHistory.push({ date: new Date().toISOString() });
-      userData.activityLog.push({
-        type: 'ad_click', 
-        date: new Date().toISOString(), 
-        ip: userIP, 
-        country: userCountry 
-      });
-    }
-
-    // Update UI immediately
-    updateBalanceUI();
-    
-    // Save to server in background
-    saveUserToServer().catch(console.error);
-    
-    showNotification('You earned ৳' + parseFloat(perAdRate).toFixed(2) + (adClicked ? ' +1 click' : ''));
-  } catch (e){
-    console.error('Ad play error', e);
-    showNotification('Ad failed to play', false);
-    adModal().style.display = 'none';
-  }
+/* ========== Watch ad flow - Enhanced with safety checks ========== */
+async function onAdEarn() {
+  const result = await watchAdWithSafety();
+  // Result is handled within watchAdWithSafety
 }
 
 adDoneBtn().addEventListener('click', ()=> { adModal().style.display = 'none'; });
@@ -1311,6 +1529,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     await loadUserFromServer();
     await loadSettings();
+    await loadAdSettings(); // Load ad settings
     await loadWithdrawalRequests();
     
     // Check for referral code and process if available
@@ -1318,6 +1537,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Update referral bonuses in background
     updateReferralBonuses().catch(e => console.error('Referral bonus update error:', e));
+    
+    // Initialize ad status
+    adScriptLoaded = checkAdScript();
+    updateAdStatusIndicator();
     
     renderUI();
     
