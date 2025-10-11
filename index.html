@@ -8,8 +8,8 @@
   <!-- Telegram Web App -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-  <!-- AdExora Ad Script -->
-  <script src="https://adexora.com/cdn/ads.js?id=516 "></script>
+  <!-- AuruAds Ad Script -->
+  <script src="https://auruads.com/cdn/ads.js?app_uid=5939"></script>
 
   <!-- Firebase (compat - works with older code patterns) -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -599,7 +599,7 @@ function checkAdBlocker() {
 
 // Check if ad script is loaded properly
 function checkAdScript() {
-  return typeof window.showAdexora === 'function';
+  return typeof window.showAuruads === 'function';
 }
 
 // Enhanced ad watching function with blocker detection and load checks
@@ -655,7 +655,7 @@ async function watchAdWithSafety() {
     let adCompleted = false;
     
     try {
-      await window.showAdexora();
+      await window.showAuruads();
       adCompleted = true;
     } catch (error) {
       adCompleted = false;
