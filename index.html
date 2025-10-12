@@ -152,6 +152,18 @@
       box-shadow: 0 6px 20px rgba(106, 17, 203, 0.4);
     }
     
+    .btn-success {
+      background: linear-gradient(135deg, #28a745, #20c997);
+      color: white;
+      box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+    }
+    
+    .btn-warning {
+      background: linear-gradient(135deg, #ffc107, #fd7e14);
+      color: white;
+      box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+    }
+    
     .btn:disabled {
       background: #ccc;
       cursor: not-allowed;
@@ -503,6 +515,34 @@
       color: #0c5460;
       border: 1px solid #bee5eb;
     }
+
+    /* Referral Section Styles */
+    .small {
+      font-size: 14px;
+      color: var(--text-light);
+      margin-bottom: 10px;
+    }
+    
+    .stat-box {
+      text-align: center;
+      padding: 10px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    
+    .referral-bonus-section {
+      margin-top: 15px;
+      padding: 15px;
+      background: #fff8e1;
+      border-radius: 10px;
+      border: 1px solid #ffeaa7;
+    }
+    
+    .bonus-claim-btn {
+      margin-top: 10px;
+      font-weight: 600;
+    }
   </style>
 </head>
 <body>
@@ -617,57 +657,39 @@
         </div>
       </div>
       
+      <!-- ==== REFER & EARN SECTION START ==== -->
       <div class="card referral-section">
         <div class="section-title">Refer & Earn</div>
-        <p style="margin-bottom: 15px;">Invite friends and earn ৳1 for each successful referral!</p>
-        
-        <div class="referral-code" id="referralCode">15K879</div>
-        
-        <div class="btn-group">
-          <button class="btn btn-secondary" id="copyCodeBtn">📋 Copy Code</button>
-          <button class="btn btn-primary" id="shareLinkBtn">🔗 Share Link</button>
+        <div class="small">Invite friends and earn ৳1 instantly + ৳2 bonus later!</div>
+
+        <div class="referral-code">
+          <div class="small">Your Referral Code:</div>
+          <div class="referral-code-text" id="referralCode">LOADING...</div>
+          <div class="btn-group">
+            <button id="copyCode" class="btn btn-primary">📋 Copy Code</button>
+            <button id="shareLink" class="btn btn-success">🔗 Share Link</button>
+          </div>
         </div>
-        
+
         <div class="referral-stats">
-          <div class="referral-stat">
-            <div class="referral-count" id="referralCount">0</div>
-            <div class="referral-label">Referrals</div>
+          <div class="stat-box">
+            <div class="stat-value" id="refCount">0</div>
+            <div class="stat-label">Referrals</div>
           </div>
-          <div class="referral-stat">
-            <div class="referral-count" id="referralEarned">৳0.00</div>
-            <div class="referral-label">Earned</div>
-          </div>
-          <div class="referral-stat">
-            <div class="referral-count" id="pendingBonus">0</div>
-            <div class="referral-label">Pending Bonus</div>
+          <div class="stat-box">
+            <div class="stat-value">৳<span id="refEarned">0</span></div>
+            <div class="stat-label">Earned</div>
           </div>
         </div>
-        
-        <div style="text-align: left; margin-top: 15px;">
-          <div class="bonus-item">
-            <div class="bonus-check">✅</div>
-            <div class="bonus-text">New referral bonus: ৳1 (auto credit)</div>
-          </div>
-          <div class="bonus-item">
-            <div class="bonus-check">✅</div>
-            <div class="bonus-text">10 TK balance bonus: ৳2 (claimable once per referral)</div>
-          </div>
-        </div>
-        
-        <button class="btn btn-primary" id="claimBonusBtn" style="margin-top: 15px;">
-          Claim Referral Bonuses (৳0)
-        </button>
-        
-        <div style="text-align: left; margin-top: 15px; font-size: 14px; color: var(--text-light);">
-          <h4>How to refer:</h4>
-          <ol style="padding-left: 20px; margin-top: 10px;">
-            <li>Share your referral link with friends</li>
-            <li>They need to open the link and use the mini app</li>
-            <li>You get ৳1 when they join through your link</li>
-            <li>When their balance reaches ৳10, you can claim ৳2 bonus</li>
-          </ol>
+
+        <div class="referral-bonus-section">
+          <div class="small" style="font-weight:700;">Referral Bonus</div>
+          <div class="small" style="margin-top:6px;">🎁 ৳1 for each new user</div>
+          <div class="small">💰 ৳2 bonus when their balance reaches ৳10</div>
+          <button id="claimBonus" class="btn btn-warning bonus-claim-btn">💸 Claim Bonus (<span id="claimable">0</span>৳)</button>
         </div>
       </div>
+      <!-- ==== REFER & EARN SECTION END ==== -->
       
       <div class="card">
         <div class="section-title">Withdraw Money</div>
@@ -736,12 +758,12 @@
       const adClicks = document.getElementById("adClicks");
       const resetTime = document.getElementById("resetTime");
       const referralCode = document.getElementById("referralCode");
-      const copyCodeBtn = document.getElementById("copyCodeBtn");
-      const shareLinkBtn = document.getElementById("shareLinkBtn");
-      const referralCount = document.getElementById("referralCount");
-      const referralEarned = document.getElementById("referralEarned");
-      const pendingBonus = document.getElementById("pendingBonus");
-      const claimBonusBtn = document.getElementById("claimBonusBtn");
+      const copyCodeBtn = document.getElementById("copyCode");
+      const shareLinkBtn = document.getElementById("shareLink");
+      const refCount = document.getElementById("refCount");
+      const refEarned = document.getElementById("refEarned");
+      const claimBonusBtn = document.getElementById("claimBonus");
+      const claimableAmount = document.getElementById("claimable");
       const withdrawalMethods = document.getElementById("withdrawalMethods");
       const accountNumber = document.getElementById("accountNumber");
       const amountOptions = document.getElementById("amountOptions");
@@ -782,8 +804,7 @@
         todayAds: 0,
         adClicks: 0,
         referralCount: 0,
-        referralEarned: 0,
-        pendingBonus: 0,
+        referralEarnings: 0,
         country: 'Unknown',
         isBlocked: false,
         withdrawalHistory: [],
@@ -828,6 +849,9 @@
       let selectedMethod = null;
       let selectedAmount = null;
 
+      // Fix for Telegram WebView double click issue
+      let adRunning = false;
+
       // Initialize the app
       async function initApp() {
         // Show loading
@@ -851,6 +875,9 @@
           
           // Update community UI
           updateCommunityUI();
+          
+          // Load referral section
+          loadReferralSection();
           
           // Render withdrawal methods
           renderWithdrawalMethods();
@@ -904,8 +931,7 @@
             todayAds: data.todayAds || 0,
             adClicks: data.adClicks || 0,
             referralCount: data.referralCount || 0,
-            referralEarned: data.referralEarned || 0,
-            pendingBonus: data.pendingBonus || 0,
+            referralEarnings: data.referralEarnings || 0,
             country: data.country || 'Unknown',
             isBlocked: data.isBlocked || false,
             withdrawalHistory: data.withdrawalHistory || [],
@@ -944,8 +970,7 @@
             todayAds: 0,
             adClicks: 0,
             referralCount: 0,
-            referralEarned: 0,
-            pendingBonus: 0,
+            referralEarnings: 0,
             country: 'Unknown',
             isBlocked: false,
             withdrawalHistory: [],
@@ -974,9 +999,6 @@
           // Save new user to Firebase
           await db.collection("users").doc(userId).set(userData);
         }
-        
-        // Set referral code in UI
-        referralCode.textContent = userData.referralCode;
       }
 
       // Generate referral code
@@ -1061,6 +1083,7 @@
                 userData.referralBonuses = updatedBonuses;
                 userData.balance += 1;
                 userData.referralEarnings += 1;
+                loadReferralSection();
               }
             }
           }
@@ -1146,38 +1169,12 @@
         balanceAmount.textContent = `৳${userData.balance.toFixed(2)}`;
         todayAds.textContent = `${userData.todayAds}/${appSettings.dailyTaskLimit}`;
         adClicks.textContent = userData.adClicks;
-        referralCount.textContent = userData.referrals ? userData.referrals.length : 0;
-        referralEarned.textContent = `৳${userData.referralEarned.toFixed(2)}`;
-        
-        // Calculate pending bonus
-        const claimableAmount = calculateClaimableBonus();
-        pendingBonus.textContent = claimableAmount;
-        
-        // Update claim bonus button
-        claimBonusBtn.textContent = `Claim Referral Bonuses (৳${claimableAmount})`;
-        claimBonusBtn.disabled = claimableAmount <= 0;
         
         // Enable/disable watch ad button based on daily limit and blocking
         watchBtn.disabled = userData.todayAds >= appSettings.dailyTaskLimit || userData.isBlocked;
         
         // Update ad reward display
         adReward.textContent = `Earning: ৳${appSettings.perAdRate.toFixed(2)}`;
-      }
-
-      // Calculate claimable bonus amount
-      function calculateClaimableBonus() {
-        let totalClaimable = 0;
-        
-        if (userData.referralBonuses) {
-          for (const referredUserId of userData.referrals) {
-            const bonus = userData.referralBonuses[referredUserId];
-            if (bonus && bonus.bonus2Eligible && !bonus.bonus2Claimed) {
-              totalClaimable += 2; // ৳2 per eligible referral
-            }
-          }
-        }
-        
-        return totalClaimable;
       }
 
       // Update community UI based on join status
@@ -1196,6 +1193,89 @@
           groupCheck.style.display = 'inline';
           joinGroupBtn.style.background = 'linear-gradient(90deg, #ffc107, #fd7e14)';
           joinGroupBtn.disabled = false;
+        }
+      }
+
+      // Load referral section
+      async function loadReferralSection(){
+        try {
+          document.getElementById("referralCode").textContent = userData.referralCode || "N/A";
+          document.getElementById("refCount").textContent = (userData.referrals?.length || 0);
+          document.getElementById("refEarned").textContent = (userData.referralEarnings || 0).toFixed(2);
+          const claimable = calcClaimable(userData);
+          document.getElementById("claimable").textContent = claimable;
+        } catch(e){ console.error(e); }
+      }
+
+      // Calculate claimable bonus
+      function calcClaimable(user){
+        let total = 0;
+        const bonuses = user.referralBonuses || {};
+        for(const id in bonuses){
+          const b = bonuses[id];
+          if(b.bonus2Eligible && !b.bonus2Claimed) total += 2;
+        }
+        return total;
+      }
+
+      // Claim bonus function
+      async function claimBonusFunc(){
+        const claimable = calcClaimable(userData);
+        if (claimable <= 0) {
+          showNotification("No bonus available to claim", false);
+          return;
+        }
+
+        userData.referralEarnings = (userData.referralEarnings || 0) + claimable;
+        userData.balance = (userData.balance || 0) + claimable;
+
+        const bonuses = userData.referralBonuses || {};
+        for (const id in bonuses){
+          if(bonuses[id].bonus2Eligible && !bonuses[id].bonus2Claimed)
+            bonuses[id].bonus2Claimed = true;
+        }
+
+        await db.collection("users").doc(userData.id).update({
+          referralEarnings: userData.referralEarnings,
+          balance: userData.balance,
+          referralBonuses: bonuses
+        });
+
+        showNotification("Bonus claimed successfully!");
+        loadReferralSection();
+        updateUI();
+      }
+
+      // Copy code function
+      function copyCodeFunc(){
+        const code = document.getElementById("referralCode").textContent;
+        navigator.clipboard.writeText(code).then(()=> showNotification("Referral code copied!"));
+      }
+
+      // Share link function
+      function shareLinkFunc(){
+        const code = document.getElementById("referralCode").textContent;
+        const botUser = "easyearn11_bot";
+        const link = `https://t.me/${botUser}?start=${code}`;
+        const text = `Join EasyEarn! Use my referral code ${code} to earn instantly.\n${link}`;
+        
+        if (navigator.share) {
+          navigator.share({
+            title: 'Earn Now',
+            text: text,
+            url: link
+          })
+          .then(() => console.log('Successful share'))
+          .catch(error => console.log('Error sharing:', error));
+        } else {
+          navigator.clipboard.writeText(text)
+            .then(() => {
+              showNotification("Referral link copied to clipboard!");
+            })
+            .catch(err => {
+              console.error('Failed to copy: ', err);
+              showNotification("Failed to copy link", false);
+            });
         }
       }
 
@@ -1423,70 +1503,74 @@
         updateUI();
       }
 
-      // 🎯 Main watch & earn function - Enhanced with new system
-      watchBtn.onclick = async () => {
-        // First check daily reset
-        checkAndResetDailyCounts();
-        
-        if (userData.todayAds >= appSettings.dailyTaskLimit) {
-          showAdSystemMessage("Daily ad limit reached. Try again tomorrow.", "warning");
-          return;
-        }
-        
-        if (userData.isBlocked) {
-          showAdSystemMessage("Your account has been blocked. Contact support.", "error");
-          return;
-        }
+      // 🎯 Fixed watch & earn function for Telegram WebView
+      watchBtn.addEventListener("click", handleWatchClick, { passive: false });
 
-        // Show ad container
-        adContainer.style.display = 'flex';
-        adReward.textContent = `Loading ad...`;
-        adClose.style.display = 'none';
-        watchBtn.disabled = true;
-
-        // 1️⃣ Wait for AuruAds
-        showAdSystemMessage("⏳ বিজ্ঞাপন লোড হচ্ছে...", "info");
-        const ready = await waitForAuruAds();
-        if (!ready) {
-          showAdSystemMessage("🚫 Ad Blocker চালু আছে বা বিজ্ঞাপন লোড হয়নি।", "error");
-          adContainer.style.display = 'none';
-          watchBtn.disabled = false;
-          return;
-        }
-
-        // 2️⃣ Start ad and measure duration
-        const start = Date.now();
-        let adShown = false;
+      async function handleWatchClick(e) {
+        e.preventDefault(); // Prevent Telegram double tap trigger
+        if (adRunning) return;
+        adRunning = true;
 
         try {
-          await window.showAuruads().then(() => { adShown = true; });
-        } catch (e) {
-          adShown = false;
-          console.warn("AuruAds error:", e);
+          checkAndResetDailyCounts();
+
+          if (userData.todayAds >= appSettings.dailyTaskLimit) {
+            showAdSystemMessage("Daily ad limit reached. Try again tomorrow.", "warning");
+            return;
+          }
+
+          if (userData.isBlocked) {
+            showAdSystemMessage("Your account has been blocked. Contact support.", "error");
+            return;
+          }
+
+          adContainer.style.display = "flex";
+          adReward.textContent = `Loading ad...`;
+          adClose.style.display = "none";
+          watchBtn.disabled = true;
+
+          showAdSystemMessage("⏳ বিজ্ঞাপন লোড হচ্ছে...", "info");
+          const ready = await waitForAuruAds();
+          if (!ready) {
+            showAdSystemMessage("🚫 Ad Blocker চালু আছে বা বিজ্ঞাপন লোড হয়নি।", "error");
+            adContainer.style.display = "none";
+            watchBtn.disabled = false;
+            return;
+          }
+
+          const start = Date.now();
+          let adShown = false;
+
+          try {
+            await window.showAuruads().then(() => { adShown = true; });
+          } catch (e) {
+            adShown = false;
+            console.warn("AuruAds error:", e);
+          }
+
+          const duration = Date.now() - start;
+
+          if (adShown && duration >= 6000) {
+            addPoint();
+            showAdSystemMessage(`✅ আপনি ৳${appSettings.perAdRate.toFixed(2)} পয়েন্ট পেয়েছেন!`, "success");
+            adReward.textContent = `Ad completed! Earned: ৳${appSettings.perAdRate.toFixed(2)}`;
+            adReward.style.color = "#4caf50";
+          } else if (adShown && duration < 6000) {
+            showAdSystemMessage("⚠️ Ad সম্পূর্ণ দেখা হয়নি, point দেওয়া হয়নি।", "warning");
+            adReward.textContent = "Ad not completed";
+            adReward.style.color = "#ff9800";
+          } else {
+            showAdSystemMessage("❌ Ad load ব্যর্থ হয়েছে। আবার চেষ্টা করুন।", "error");
+            adReward.textContent = "Ad failed to load";
+            adReward.style.color = "#f44336";
+          }
+
+          adClose.style.display = "block";
+          watchBtn.disabled = false;
+        } finally {
+          setTimeout(() => { adRunning = false; }, 1500);
         }
-
-        const duration = Date.now() - start;
-
-        // 3️⃣ Only add point if ad watched >= 6s
-        if (adShown && duration >= 6000) {
-          addPoint();
-          showAdSystemMessage("✅ আপনি ৳" + appSettings.perAdRate.toFixed(2) + " পয়েন্ট পেয়েছেন!", "success");
-          adReward.textContent = `Ad completed! Earned: ৳${appSettings.perAdRate.toFixed(2)}`;
-          adReward.style.color = "#4caf50";
-        } else if (adShown && duration < 6000) {
-          showAdSystemMessage("⚠️ Ad সম্পূর্ণ দেখা হয়নি, point দেওয়া হয়নি।", "warning");
-          adReward.textContent = "Ad not completed";
-          adReward.style.color = "#ff9800";
-        } else {
-          showAdSystemMessage("❌ Ad load ব্যর্থ হয়েছে। আবার চেষ্টা করুন।", "error");
-          adReward.textContent = "Ad failed to load";
-          adReward.style.color = "#f44336";
-        }
-
-        // Show close button
-        adClose.style.display = 'block';
-        watchBtn.disabled = false;
-      };
+      }
 
       // Close ad container
       adClose.addEventListener('click', function() {
@@ -1502,8 +1586,7 @@
             todayAds: userData.todayAds,
             adClicks: userData.adClicks,
             referralCount: userData.referralCount,
-            referralEarned: userData.referralEarned,
-            pendingBonus: userData.pendingBonus,
+            referralEarnings: userData.referralEarnings,
             withdrawalHistory: userData.withdrawalHistory,
             adHistory: userData.adHistory,
             adClickHistory: userData.adClickHistory,
@@ -1521,89 +1604,6 @@
           console.error("Error updating user in Firebase:", error);
         }
       }
-
-      // Copy referral code
-      copyCodeBtn.addEventListener('click', function() {
-        navigator.clipboard.writeText(userData.referralCode)
-          .then(() => {
-            showNotification("Referral code copied to clipboard!");
-          })
-          .catch(err => {
-            console.error('Failed to copy: ', err);
-            showNotification("Failed to copy code", false);
-          });
-      });
-
-      // Share referral link
-      shareLinkBtn.addEventListener('click', function() {
-        const shareText = `Join Earn Now using my referral code: ${userData.referralCode}. Start earning money by watching ads!\n\n${generateReferralLink()}`;
-        
-        if (navigator.share) {
-          navigator.share({
-            title: 'Earn Now',
-            text: shareText,
-            url: generateReferralLink()
-          })
-          .then(() => console.log('Successful share'))
-          .catch(error => console.log('Error sharing:', error));
-        } else {
-          navigator.clipboard.writeText(shareText)
-            .then(() => {
-              showNotification("Referral link copied to clipboard!");
-            })
-            .catch(err => {
-              console.error('Failed to copy: ', err);
-              showNotification("Failed to copy link", false);
-            });
-        }
-      });
-
-      // Claim referral bonus
-      claimBonusBtn.addEventListener('click', async function() {
-        const claimableAmount = calculateClaimableBonus();
-        
-        if (claimableAmount <= 0) {
-          showNotification("No bonuses available to claim", false);
-          return;
-        }
-        
-        try {
-          const updatedBonuses = {...userData.referralBonuses};
-          let claimedCount = 0;
-          
-          for (const referredUserId of userData.referrals) {
-            const bonus = updatedBonuses[referredUserId];
-            if (bonus && bonus.bonus2Eligible && !bonus.bonus2Claimed) {
-              updatedBonuses[referredUserId].bonus2Claimed = true;
-              claimedCount++;
-            }
-          }
-          
-          // Update user balance and bonuses
-          userData.balance += claimableAmount;
-          userData.referralEarned += claimableAmount;
-          userData.referralBonuses = updatedBonuses;
-          userData.claimedBonuses.push({
-            date: new Date().toISOString(),
-            amount: claimableAmount,
-            referrals: claimedCount
-          });
-          
-          await db.collection("users").doc(userData.id).update({
-            balance: userData.balance,
-            referralEarned: userData.referralEarned,
-            referralBonuses: updatedBonuses,
-            claimedBonuses: userData.claimedBonuses
-          });
-          
-          showNotification(`Successfully claimed ৳${claimableAmount} referral bonus!`);
-          updateUI();
-          
-        } catch (e) {
-          console.error('Error claiming referral bonuses:', e);
-          showNotification('Error claiming bonuses', false);
-        }
-      });
 
       // Custom amount input
       customAmount.addEventListener('input', function() {
@@ -1691,6 +1691,11 @@
       // Community section event listeners
       joinChannelBtn.addEventListener('click', openCommunityChannel);
       joinGroupBtn.addEventListener('click', openSupportGroup);
+
+      // Referral section event listeners
+      copyCodeBtn.addEventListener('click', copyCodeFunc);
+      shareLinkBtn.addEventListener('click', shareLinkFunc);
+      claimBonusBtn.addEventListener('click', claimBonusFunc);
 
       // Initialize the app
       initApp();
