@@ -1,5 +1,3 @@
-[file name]: admin.html
-[file content begin]
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,121 +12,115 @@
   
   <style>
     :root {
-      --primary-gradient: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
-      --secondary-gradient: linear-gradient(135deg, #2575fc 0%, #6a11cb 100%);
-      --card-bg: rgba(255, 255, 255, 0.9);
-      --glass-bg: rgba(255, 255, 255, 0.15);
-      --glass-border: rgba(255, 255, 255, 0.2);
-      --text-dark: #2d3436;
-      --text-light: #ffffff;
-      --shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      --primary: #6a11cb;
+      --secondary: #2575fc;
       --success: #4caf50;
       --warning: #ff9800;
       --danger: #f44336;
+      --light: #f8f9fa;
+      --dark: #121212;
+      --card-bg: #1e1e1e;
+      --text: #ffffff;
+      --text-light: #aaaaaa;
+      --border: #333333;
     }
     
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
     
     body {
-      background: var(--primary-gradient);
-      min-height: 100vh;
-      padding: 20px;
-      color: var(--text-dark);
+      background-color: var(--dark);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 0;
     }
     
     .app-container {
       max-width: 1200px;
       margin: 0 auto;
-      backdrop-filter: blur(10px);
-      background: var(--glass-bg);
-      border-radius: 20px;
-      border: 1px solid var(--glass-border);
-      box-shadow: var(--shadow);
-      overflow: hidden;
+      padding: 20px;
     }
     
     header {
-      background: var(--secondary-gradient);
-      color: var(--text-light);
-      padding: 25px 20px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 20px;
       text-align: center;
-      position: relative;
-      overflow: hidden;
-    }
-    
-    header::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-      transform: rotate(30deg);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     }
     
     h1 {
       font-size: 28px;
-      margin-bottom: 15px;
+      margin-bottom: 10px;
       font-weight: 700;
-      letter-spacing: 0.5px;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
     
-    .content-section {
-      padding: 25px 20px;
-      background: var(--card-bg);
-      margin: 15px;
-      border-radius: 16px;
-      box-shadow: var(--shadow);
-    }
-    
-    h2 {
-      font-size: 20px;
+    .card {
+      background-color: var(--card-bg);
+      border-radius: 15px;
+      padding: 20px;
       margin-bottom: 20px;
-      color: #6a11cb;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+    
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 15px;
       display: flex;
       align-items: center;
     }
     
-    h2::before {
+    .section-title::before {
       content: '';
       display: inline-block;
-      width: 8px;
-      height: 24px;
-      background: var(--primary-gradient);
-      border-radius: 10px;
-      margin-right: 12px;
+      width: 4px;
+      height: 20px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: 2px;
+      margin-right: 10px;
     }
     
     .btn {
-      padding: 16px;
-      border-radius: 12px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
+      display: inline-block;
+      padding: 12px 20px;
       border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      text-align: center;
+      cursor: pointer;
       transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
     }
     
     .btn-primary {
-      background: var(--primary-gradient);
-      color: var(--text-light);
-      box-shadow: 0 4px 15px rgba(106, 17, 203, 0.3);
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
     }
     
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(106, 17, 203, 0.4);
+    .btn-success {
+      background: linear-gradient(135deg, #28a745, #20c997);
+      color: white;
+    }
+    
+    .btn-warning {
+      background: linear-gradient(135deg, #ffc107, #fd7e14);
+      color: white;
+    }
+    
+    .btn-danger {
+      background: linear-gradient(135deg, #f44336, #d32f2f);
+      color: white;
+    }
+    
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
     
     .input-group {
@@ -136,143 +128,69 @@
     }
     
     .input-label {
-      display: block;
+      font-size: 14px;
+      font-weight: 600;
       margin-bottom: 8px;
-      font-weight: 600;
-      color: #555;
+      display: block;
     }
     
-    input, select {
+    input[type="text"],
+    input[type="number"],
+    input[type="password"] {
       width: 100%;
-      padding: 15px;
-      border-radius: 12px;
-      border: 1px solid #ddd;
-      font-size: 16px;
-      background: #f8f9fa;
-      transition: all 0.3s ease;
-    }
-    
-    input:focus, select:focus {
-      outline: none;
-      border-color: #6a11cb;
-      box-shadow: 0 0 0 3px rgba(106, 17, 203, 0.1);
-    }
-    
-    .status-badge {
-      padding: 5px 12px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 600;
-    }
-    
-    .status-pending {
-      background: #fff3cd;
-      color: #856404;
-    }
-    
-    .status-paid {
-      background: #d4edda;
-      color: #155724;
-    }
-    
-    .status-rejected {
-      background: #f8d7da;
-      color: #721c24;
-    }
-    
-    .notification {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 15px 20px;
-      background: #4caf50;
-      color: #fff;
-      border-radius: 12px;
-      display: none;
-      z-index: 2000;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.15);
-      animation: slideIn 0.3s ease;
-    }
-    
-    @keyframes slideIn {
-      from { transform: translateX(100px); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
-    }
-    
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      margin-top: 15px;
-      background: white;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-    }
-    
-    th, td {
-      padding: 12px 8px;
-      border: 1px solid #e9ecef;
-      text-align: center;
+      padding: 12px 15px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background-color: rgba(255, 255, 255, 0.05);
+      color: var(--text);
       font-size: 14px;
     }
     
-    th {
-      background: #f8f9fa;
-      font-weight: 600;
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
     }
     
-    .action-btn {
-      cursor: pointer;
-      padding: 6px 10px;
-      margin: 0 2px;
-      border-radius: 6px;
+    .stats-card {
+      background-color: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      padding: 15px;
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 5px;
+    }
+    
+    .stat-label {
       font-size: 12px;
-      border: none;
-      transition: all 0.2s ease;
+      opacity: 0.7;
     }
     
-    .approve {
-      background: #4caf50;
-      color: white;
-    }
-    
-    .reject {
-      background: #f44336;
-      color: white;
-    }
-    
-    .delete {
-      background: #6c757d;
-      color: white;
+    .admin-login-form {
+      max-width: 400px;
+      margin: 50px auto;
+      padding: 30px;
+      text-align: center;
     }
     
     .hidden-section {
       display: none;
     }
     
-    /* Admin Panel Styling */
-    .admin-login-form {
-      background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
-      padding: 20px;
-      border-radius: 16px;
-      margin-bottom: 20px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-    }
-    
     .admin-controls-panel {
-      background: #f8f9fa;
-      padding: 20px;
-      border-radius: 16px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+      display: block;
     }
     
-    /* Country Restriction Styling */
-    .country-restrictions {
-      background: white;
-      padding: 20px;
-      border-radius: 16px;
-      margin-top: 20px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    .form-title {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      text-align: center;
     }
     
     .country-search {
@@ -280,215 +198,206 @@
       margin-bottom: 15px;
     }
     
-    .country-search input {
-      padding-left: 40px;
-    }
-    
     .search-icon {
       position: absolute;
       left: 15px;
       top: 50%;
       transform: translateY(-50%);
-      color: #999;
+    }
+    
+    .country-search input {
+      padding-left: 40px;
     }
     
     .country-tiers {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      display: flex;
       gap: 10px;
       margin-bottom: 15px;
     }
     
     .tier-btn {
-      padding: 10px;
-      border: 2px solid #e4e8f0;
-      border-radius: 8px;
-      background: white;
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-size: 12px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.3s ease;
-      text-align: center;
-    }
-    
-    .tier-btn:hover {
-      border-color: #6a11cb;
-      background: rgba(106, 17, 203, 0.05);
-    }
-    
-    .tier-btn.selected {
-      border-color: #6a11cb;
-      background: rgba(106, 17, 203, 0.1);
     }
     
     .tier-high {
-      color: #e74c3c;
+      background-color: rgba(76, 175, 80, 0.2);
+      color: #4caf50;
     }
     
     .tier-medium {
-      color: #f39c12;
+      background-color: rgba(255, 152, 0, 0.2);
+      color: #ff9800;
     }
     
     .tier-low {
-      color: #27ae60;
+      background-color: rgba(244, 67, 54, 0.2);
+      color: #f44336;
+    }
+    
+    .tier-btn.selected {
+      background-color: inherit;
+      color: white;
+    }
+    
+    .tier-high.selected {
+      background-color: #4caf50;
+    }
+    
+    .tier-medium.selected {
+      background-color: #ff9800;
+    }
+    
+    .tier-low.selected {
+      background-color: #f44336;
     }
     
     .countries-list {
       max-height: 200px;
       overflow-y: auto;
-      border: 1px solid #e4e8f0;
-      border-radius: 8px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
       padding: 10px;
+      margin-bottom: 15px;
     }
     
     .country-item {
-      display: flex;
-      align-items: center;
-      padding: 8px;
-      border-radius: 6px;
+      padding: 8px 10px;
+      border-radius: 5px;
       margin-bottom: 5px;
       cursor: pointer;
-      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
     }
     
     .country-item:hover {
-      background: #f8f9fa;
+      background-color: rgba(255, 255, 255, 0.05);
     }
     
     .country-item.selected {
-      background: rgba(106, 17, 203, 0.1);
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
     }
     
     .country-checkbox {
       margin-right: 10px;
     }
     
-    /* User Management Styling */
-    .user-management {
-      background: white;
-      padding: 20px;
-      border-radius: 16px;
-      margin-top: 20px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    .selected-countries {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 10px;
     }
     
-    .user-search {
-      position: relative;
-      margin-bottom: 15px;
+    .status-badge {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
     }
     
-    .user-search input {
-      padding-left: 40px;
+    .status-pending {
+      background-color: rgba(255, 152, 0, 0.2);
+      color: #ff9800;
+    }
+    
+    .status-paid {
+      background-color: rgba(76, 175, 80, 0.2);
+      color: #4caf50;
+    }
+    
+    .status-rejected {
+      background-color: rgba(244, 67, 54, 0.2);
+      color: #f44336;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    th, td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    th {
+      font-weight: 600;
+      font-size: 14px;
+    }
+    
+    .action-btn {
+      padding: 6px 10px;
+      border: none;
+      border-radius: 5px;
+      font-size: 12px;
+      cursor: pointer;
+      margin-right: 5px;
+    }
+    
+    .approve {
+      background-color: rgba(76, 175, 80, 0.2);
+      color: #4caf50;
+    }
+    
+    .reject {
+      background-color: rgba(255, 152, 0, 0.2);
+      color: #ff9800;
+    }
+    
+    .delete {
+      background-color: rgba(244, 67, 54, 0.2);
+      color: #f44336;
     }
     
     .users-list {
-      max-height: 300px;
-      overflow-y: auto;
-      border: 1px solid #e4e8f0;
-      border-radius: 8px;
-      padding: 10px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
     }
     
     .user-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px;
-      border-radius: 8px;
-      margin-bottom: 8px;
-      background: #f8f9fa;
+      background-color: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      padding: 15px;
     }
     
     .user-info {
-      flex: 1;
+      margin-bottom: 10px;
     }
     
     .user-name {
       font-weight: 600;
+      margin-bottom: 5px;
     }
     
     .user-id {
       font-size: 12px;
-      color: #666;
+      opacity: 0.7;
+      margin-bottom: 5px;
     }
     
-    .user-balance {
-      font-weight: 700;
-      color: #6a11cb;
-      margin-right: 10px;
+    .balance-display {
+      font-weight: 600;
+      margin-top: 5px;
+      color: var(--success);
     }
     
     .user-actions {
       display: flex;
+      flex-wrap: wrap;
       gap: 5px;
     }
     
-    .edit-balance-form {
-      display: flex;
-      gap: 10px;
-      margin-top: 10px;
-      padding: 10px;
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    
-    .edit-balance-form input {
-      flex: 1;
-      font-size: 16px;
-      font-weight: bold;
-      padding: 12px;
-      border: 2px solid #6a11cb;
-    }
-    
-    /* Firebase loading indicator */
-    .firebase-loading {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.7);
-      z-index: 3000;
-      justify-content: center;
-      align-items: center;
-      color: white;
-      font-size: 18px;
-    }
-    
-    /* New styles for enhanced user management */
-    .user-details-panel {
-      background: white;
-      padding: 15px;
-      border-radius: 12px;
-      margin-top: 15px;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.05);
-    }
-    
-    .user-details-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-    
-    .user-activity-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-    
-    .user-activity-table th,
-    .user-activity-table td {
-      padding: 8px;
-      text-align: left;
-      border-bottom: 1px solid #eee;
-      font-size: 12px;
-    }
-    
-    .user-activity-table th {
-      background-color: #f8f9fa;
-      font-weight: 600;
+    .blocked-user {
+      opacity: 0.7;
+      border-left: 4px solid var(--danger);
     }
     
     .flag-icon {
@@ -496,96 +405,13 @@
       height: 15px;
       margin-right: 5px;
       vertical-align: middle;
-      border: 1px solid #ddd;
     }
     
-    .blocked-user {
-      background-color: #fff5f5;
-      border: 1px solid #ffcccc;
-    }
-    
-    .block-btn {
-      background: #f44336;
-      color: white;
-    }
-    
-    .unblock-btn {
-      background: #4caf50;
-      color: white;
-    }
-    
-    .activity-badge {
-      padding: 3px 8px;
-      border-radius: 10px;
-      font-size: 10px;
-      font-weight: 600;
-    }
-    
-    .activity-ad {
-      background: #e3f2fd;
-      color: #1976d2;
-    }
-    
-    .activity-withdrawal {
-      background: #e8f5e9;
-      color: #388e3c;
-    }
-    
-    .activity-login {
-      background: #fff3e0;
-      color: #f57c00;
-    }
-    
-    .activity-ad_click {
-      background: #f3e5f5;
-      color: #7b1fa2;
-    }
-    
-    .user-status {
-      padding: 3px 8px;
-      border-radius: 10px;
-      font-size: 10px;
-      font-weight: 600;
-    }
-    
-    .status-active {
-      background: #e8f5e9;
-      color: #388e3c;
-    }
-    
-    .status-blocked {
-      background: #ffebee;
-      color: #d32f2f;
-    }
-    
-    .user-ip {
-      font-family: monospace;
-      font-size: 11px;
-      color: #666;
-    }
-    
-    .form-title {
-      font-size: 18px;
+    .methods-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 10px;
       margin-bottom: 15px;
-      color: #6a11cb;
-      text-align: center;
-    }
-    
-    /* Task Limit Settings */
-    .task-limit-settings {
-      background: white;
-      padding: 20px;
-      border-radius: 16px;
-      margin-top: 20px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-    }
-    
-    .withdrawal-methods {
-      background: white;
-      padding: 20px;
-      border-radius: 16px;
-      margin-top: 20px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
     }
     
     .method-item {
@@ -593,11 +419,13 @@
       justify-content: space-between;
       align-items: center;
       padding: 10px;
-      border-bottom: 1px solid #eee;
+      background-color: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
     }
     
     .method-controls {
       display: flex;
+      align-items: center;
       gap: 10px;
     }
     
@@ -639,187 +467,194 @@
     }
     
     input:checked + .slider {
-      background-color: #4caf50;
+      background-color: var(--success);
     }
     
     input:checked + .slider:before {
       transform: translateX(26px);
     }
     
-    .stats-card {
-      background: white;
-      padding: 15px;
-      border-radius: 12px;
-      margin: 10px 0;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.05);
-    }
-    
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 15px;
-      margin-top: 15px;
-    }
-    
-    .stat-value {
-      font-size: 24px;
-      font-weight: 700;
-      color: #6a11cb;
-    }
-    
-    .stat-label {
-      font-size: 14px;
-      color: #666;
-    }
-    
-    /* Delete confirmation modal */
-    .modal {
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 20px;
+      border-radius: 10px;
+      color: white;
+      font-weight: 600;
+      z-index: 1000;
       display: none;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+    
+    .modal {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,0.5);
-      z-index: 4000;
+      background-color: rgba(0, 0, 0, 0.7);
+      display: none;
       justify-content: center;
       align-items: center;
+      z-index: 1001;
     }
     
     .modal-content {
-      background: white;
-      padding: 25px;
-      border-radius: 12px;
+      background-color: var(--card-bg);
+      border-radius: 15px;
+      padding: 20px;
       max-width: 400px;
       width: 90%;
-      text-align: center;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
     }
     
     .modal-buttons {
       display: flex;
+      justify-content: flex-end;
       gap: 10px;
       margin-top: 20px;
-      justify-content: center;
     }
     
-    .modal-buttons button {
-      padding: 10px 20px;
-      border-radius: 6px;
-      border: none;
-      cursor: pointer;
-      font-weight: 600;
-    }
-    
-    .confirm-delete {
-      background: #f44336;
-      color: white;
-    }
-    
-    .cancel-delete {
-      background: #6c757d;
-      color: white;
-    }
-    
-    .delete-user-btn {
-      background: #dc3545;
-      color: white;
-    }
-    
-    /* Enhanced balance display */
-    .balance-display {
-      font-size: 18px;
-      font-weight: bold;
-      color: #6a11cb;
-      margin: 5px 0;
-    }
-    
-    /* New styles for balance edit modal */
     .balance-edit-modal {
-      display: none;
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,0.5);
-      z-index: 4000;
+      background-color: rgba(0, 0, 0, 0.7);
+      display: none;
       justify-content: center;
       align-items: center;
+      z-index: 1001;
     }
     
     .balance-edit-content {
-      background: white;
-      padding: 25px;
-      border-radius: 12px;
+      background-color: var(--card-bg);
+      border-radius: 15px;
+      padding: 20px;
       max-width: 400px;
       width: 90%;
-      text-align: center;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
     }
     
     .balance-edit-input {
-      font-size: 24px;
-      font-weight: bold;
-      padding: 15px;
-      text-align: center;
       width: 100%;
+      padding: 12px 15px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background-color: rgba(255, 255, 255, 0.05);
+      color: var(--text);
+      font-size: 16px;
       margin: 15px 0;
-      border: 2px solid #6a11cb;
-      border-radius: 8px;
     }
     
     .balance-edit-buttons {
       display: flex;
+      justify-content: flex-end;
       gap: 10px;
-      margin-top: 20px;
-      justify-content: center;
     }
     
-    .balance-edit-buttons button {
-      padding: 10px 20px;
-      border-radius: 6px;
-      border: none;
-      cursor: pointer;
+    .firebase-loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: var(--dark);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    
+    .loading {
+      border: 5px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top: 5px solid var(--secondary);
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 15px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .user-details-panel {
+      margin-top: 15px;
+      padding: 15px;
+      background-color: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      font-size: 14px;
+    }
+    
+    .user-details-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    
+    .user-status {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
       font-weight: 600;
     }
     
-    .save-balance-btn {
-      background: #4caf50;
-      color: white;
+    .status-active {
+      background-color: rgba(76, 175, 80, 0.2);
+      color: #4caf50;
     }
     
-    .cancel-balance-btn {
-      background: #6c757d;
-      color: white;
-    }
-
-    /* New styles for referral stats */
-    .referral-stats {
-      display: flex;
-      gap: 10px;
-      margin: 10px 0;
-      flex-wrap: wrap;
+    .status-blocked {
+      background-color: rgba(244, 67, 54, 0.2);
+      color: #f44336;
     }
     
-    .referral-stat {
-      background: #f8f9fa;
-      padding: 8px 12px;
-      border-radius: 8px;
+    .user-activity-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
       font-size: 12px;
-      border: 1px solid #e9ecef;
     }
     
-    .referral-stat-value {
-      font-weight: 700;
+    .user-activity-table th,
+    .user-activity-table td {
+      padding: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .activity-badge {
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+    
+    .activity-ad_watch {
+      background-color: rgba(106, 17, 203, 0.2);
       color: #6a11cb;
     }
-
-    /* Last active time */
-    .last-active {
-      font-size: 11px;
-      color: #666;
-      margin-top: 5px;
+    
+    .user-ip {
+      font-family: monospace;
+    }
+    
+    .tier-high {
+      color: #4caf50;
+      font-weight: 600;
+    }
+    
+    .tier-medium {
+      color: #ff9800;
+      font-weight: 600;
+    }
+    
+    .tier-low {
+      color: #f44336;
+      font-weight: 600;
     }
   </style>
 </head>
@@ -836,8 +671,8 @@
       <h3>Delete User</h3>
       <p>Are you sure you want to delete this user? This action cannot be undone.</p>
       <div class="modal-buttons">
-        <button class="confirm-delete" id="confirmDelete">Delete</button>
-        <button class="cancel-delete" id="cancelDelete">Cancel</button>
+        <button class="btn btn-danger confirm-delete" id="confirmDelete">Delete</button>
+        <button class="btn btn-primary cancel-delete" id="cancelDelete">Cancel</button>
       </div>
     </div>
   </div>
@@ -847,8 +682,8 @@
       <h3>Edit User Balance</h3>
       <input type="number" class="balance-edit-input" id="balanceEditInput" step="0.01" min="0" placeholder="Enter new balance">
       <div class="balance-edit-buttons">
-        <button class="save-balance-btn" id="saveBalanceBtn">Save</button>
-        <button class="cancel-balance-btn" id="cancelBalanceBtn">Cancel</button>
+        <button class="btn btn-primary save-balance-btn" id="saveBalanceBtn">Save</button>
+        <button class="btn btn-danger cancel-balance-btn" id="cancelBalanceBtn">Cancel</button>
       </div>
     </div>
   </div>
@@ -856,11 +691,13 @@
   <div class="app-container">
     <header>
       <h1>Earn Now - Admin Panel</h1>
+      <p>Manage users, settings, and withdrawal requests</p>
     </header>
 
     <main>
       <div class="content-section">
-        <div class="admin-login-form">
+        <div class="admin-login-form card" id="adminLoginForm">
+          <div class="form-title">Admin Login</div>
           <div class="input-group">
             <div class="input-label">Admin Password</div>
             <input type="password" id="admin-password" placeholder="Enter admin password">
@@ -871,15 +708,13 @@
         </div>
         
         <div id="admin-controls" class="admin-controls-panel hidden-section">
-          <div class="form-title">Admin Settings</div>
-          
-          <div class="input-group">
-            <div class="input-label">Per Ad Rate (৳)</div>
-            <input type="number" id="per-ad-rate" step="0.06" value="0.06" min="0.06" placeholder="Enter amount per ad">
-          </div>
-          
-          <div class="task-limit-settings">
-            <h3>Daily Task Limits</h3>
+          <div class="card">
+            <div class="section-title">Admin Settings</div>
+            
+            <div class="input-group">
+              <div class="input-label">Per Ad Rate (৳)</div>
+              <input type="number" id="per-ad-rate" step="0.01" value="0.06" min="0.01" placeholder="Enter amount per ad">
+            </div>
             
             <div class="input-group">
               <div class="input-label">Daily Ad Limit per User</div>
@@ -908,10 +743,14 @@
                 <div class="stat-label">Total Withdrawals</div>
               </div>
             </div>
+            
+            <button class="btn btn-primary" id="save-settings">
+              <span>💾</span> Save Settings
+            </button>
           </div>
           
-          <div class="country-restrictions">
-            <h3>Country Restrictions by eCPM Tier</h3>
+          <div class="card">
+            <div class="section-title">Country Restrictions by eCPM Tier</div>
             
             <div class="country-search">
               <span class="search-icon">🔍</span>
@@ -932,14 +771,14 @@
             </div>
           </div>
           
-          <div class="withdrawal-methods">
-            <h3>Withdrawal Methods</h3>
+          <div class="card">
+            <div class="section-title">Withdrawal Methods</div>
             
-            <div id="methods-list">
+            <div id="methods-list" class="methods-list">
               <!-- Methods will be loaded here -->
             </div>
             
-            <div class="input-group" style="margin-top: 15px;">
+            <div class="input-group">
               <div class="input-label">Add New Method</div>
               <div style="display: flex; gap: 10px;">
                 <input type="text" id="new-method-name" placeholder="Method name (e.g., Rocket)">
@@ -948,8 +787,8 @@
             </div>
           </div>
           
-          <div class="user-management">
-            <h3>User Management</h3>
+          <div class="card">
+            <div class="section-title">User Management</div>
             
             <div class="user-search">
               <span class="search-icon">🔍</span>
@@ -959,20 +798,18 @@
             <div class="users-list" id="users-list"></div>
           </div>
           
-          <button class="btn btn-primary" id="save-settings">
-            <span>💾</span> Save Settings
-          </button>
-          
-          <h3 style="margin-top: 20px;">Withdrawal Requests</h3>
-          <div style="overflow-x: auto;">
-            <table>
-              <thead>
-                <tr>
-                  <th>User Name</th><th>Username</th><th>Method</th><th>Number</th><th>Amount</th><th>Date</th><th>Status</th><th>Action</th>
-                </tr>
-              </thead>
-              <tbody id="withdraw-requests"></tbody>
-            </table>
+          <div class="card">
+            <div class="section-title">Withdrawal Requests</div>
+            <div style="overflow-x: auto;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>User Name</th><th>Username</th><th>Method</th><th>Number</th><th>Amount</th><th>Date</th><th>Status</th><th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="withdraw-requests"></tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -1058,6 +895,7 @@
 
       const adminLoginBtn = document.getElementById("admin-login");
       const adminControls = document.getElementById("admin-controls");
+      const adminLoginForm = document.getElementById("adminLoginForm");
       const perAdRateInput = document.getElementById("per-ad-rate");
       const dailyTaskLimitInput = document.getElementById("daily-task-limit");
       const saveSettingsBtn = document.getElementById("save-settings");
@@ -1098,6 +936,10 @@
       let userToDelete = null;
       let userToEditBalance = null;
 
+      // Real-time listeners
+      let usersUnsubscribe = null;
+      let requestsUnsubscribe = null;
+
       // Format date as DD-MM-YYYY
       function formatWithdrawalDate(dateString) {
         if (!dateString) return 'Unknown';
@@ -1115,18 +957,50 @@
         }
       }
 
-      // Calculate last active time
-      function getLastActiveTime(user) {
-        if (!user.activityLog || user.activityLog.length === 0) {
-          return user.registrationDate ? new Date(user.registrationDate).toLocaleString() : 'Never';
-        }
-        
-        const lastActivity = user.activityLog.reduce((latest, activity) => {
-          const activityDate = new Date(activity.date);
-          return activityDate > latest ? activityDate : latest;
-        }, new Date(0));
-        
-        return lastActivity.toLocaleString();
+      // Set up real-time listeners
+      function setupRealtimeListeners() {
+        // Listen for users changes
+        usersUnsubscribe = db.collection("users").onSnapshot((snapshot) => {
+          allUsers = [];
+          snapshot.forEach(doc => {
+            const userData = doc.data();
+            allUsers.push({
+              id: doc.id,
+              name: userData.name || 'Unknown',
+              username: userData.username || 'no_username',
+              userId: userData.userId || doc.id,
+              country: userData.country || 'Unknown',
+              ip: userData.ip || 'Not available',
+              balance: userData.balance || 0,
+              isBlocked: userData.isBlocked || false,
+              adHistory: userData.adHistory || [],
+              adClickHistory: userData.adClickHistory || [],
+              lastLogin: userData.lastLogin || null,
+              registrationDate: userData.registrationDate || null,
+              activityLog: userData.activityLog || []
+            });
+          });
+          
+          renderUsersList();
+          updateStats();
+        }, (error) => {
+          console.error("Error listening to users:", error);
+        });
+
+        // Listen for withdrawal requests changes
+        requestsUnsubscribe = db.collection("withdrawalRequests")
+          .orderBy("date", "desc")
+          .onSnapshot((snapshot) => {
+            allRequests = [];
+            snapshot.forEach(doc => {
+              allRequests.push({id: doc.id, ...doc.data()});
+            });
+            
+            updateRequestsTable();
+            updateStats();
+          }, (error) => {
+            console.error("Error listening to withdrawal requests:", error);
+          });
       }
 
       // Delete user functionality
@@ -1138,11 +1012,7 @@
       async function deleteUser(userId) {
         try {
           await db.collection("users").doc(userId).delete();
-          // Remove from local array
-          allUsers = allUsers.filter(user => user.id !== userId);
           showNotification("User deleted successfully");
-          renderUsersList();
-          updateStats();
         } catch (error) {
           console.error("Error deleting user:", error);
           showNotification("Error deleting user", false);
@@ -1166,15 +1036,12 @@
         
         const newBalance = parseFloat(balanceEditInput.value);
         if (!isNaN(newBalance) && newBalance >= 0) {
-          // Update user balance in allUsers
-          const userIndex = allUsers.findIndex(u => u.id === userToEditBalance);
-          allUsers[userIndex].balance = newBalance;
-          
           // Update in Firebase
-          await updateUserInAllUsers(userToEditBalance, { balance: newBalance });
+          await db.collection("users").doc(userToEditBalance).update({
+            balance: newBalance
+          });
           
           showNotification("Balance updated successfully");
-          renderUsersList();
           balanceEditModal.style.display = "none";
           userToEditBalance = null;
         } else {
@@ -1228,34 +1095,6 @@
           saveUserBalance();
         }
       });
-
-      async function loadAllRequests() {
-        try {
-          const requestsSnapshot = await db.collection("withdrawalRequests")
-            .orderBy("date", "desc")
-            .get();
-          
-          allRequests = [];
-          requestsSnapshot.forEach(doc => {
-            allRequests.push({id: doc.id, ...doc.data()});
-          });
-        } catch (error) {
-          console.error("Error loading withdrawal requests:", error);
-        }
-      }
-
-      async function loadAllUsers() {
-        try {
-          const usersSnapshot = await db.collection("users").get();
-          
-          allUsers = [];
-          usersSnapshot.forEach(doc => {
-            allUsers.push({id: doc.id, ...doc.data()});
-          });
-        } catch (error) {
-          console.error("Error loading users:", error);
-        }
-      }
 
       async function loadSettings() {
         try {
@@ -1311,8 +1150,8 @@
       async function saveSettings() {
         try {
           await db.collection("settings").doc("appSettings").set({
-            perAdRate: perAdRate,
-            dailyTaskLimit: dailyTaskLimit
+            perAdRate: parseFloat(perAdRateInput.value) || 0.06,
+            dailyTaskLimit: parseInt(dailyTaskLimitInput.value) || 1234
           });
           
           await db.collection("settings").doc("countryRestrictions").set({
@@ -1323,17 +1162,13 @@
           await db.collection("settings").doc("withdrawalMethods").set({
             methods: withdrawalMethods
           });
+          
+          // Update local variables
+          perAdRate = parseFloat(perAdRateInput.value) || 0.06;
+          dailyTaskLimit = parseInt(dailyTaskLimitInput.value) || 1234;
         } catch (error) {
           console.error("Error saving settings:", error);
           showNotification("Error saving settings", false);
-        }
-      }
-
-      async function updateUserInAllUsers(userId, updates) {
-        try {
-          await db.collection("users").doc(userId).update(updates);
-        } catch (error) {
-          console.error("Error updating user:", error);
         }
       }
 
@@ -1342,11 +1177,10 @@
         document.getElementById("firebaseLoading").style.display = "flex";
         
         try {
-          await Promise.all([
-            loadAllRequests(),
-            loadAllUsers(),
-            loadSettings()
-          ]);
+          await loadSettings();
+          
+          // Set up real-time listeners
+          setupRealtimeListeners();
           
           updateRequestsTable();
           renderCountryList();
@@ -1354,6 +1188,10 @@
           renderUsersList();
           renderWithdrawalMethods();
           updateStats();
+          
+          // Set current values in inputs
+          perAdRateInput.value = perAdRate.toFixed(2);
+          dailyTaskLimitInput.value = dailyTaskLimit;
         } catch (error) {
           console.error("Error loading data:", error);
           showNotification("Error loading data", false);
@@ -1390,7 +1228,7 @@
             <td>${r.userName || 'Unknown'}</td>
             <td>${r.userUsername || 'Unknown'}</td>
             <td>${r.method}</td>
-            <td>${r.number}</td>
+            <td>${r.accountNumber || r.number || 'N/A'}</td>
             <td>৳${r.amount}</td>
             <td>${formatWithdrawalDate(r.date)}</td>
             <td><span class="status-badge status-${r.status}">${r.status}</span></td>
@@ -1407,14 +1245,6 @@
           btn.addEventListener('click', async () => {
             const requestId = btn.getAttribute('data-id');
             await updateWithdrawalRequest(requestId, { status: "paid" });
-            
-            // Update local data
-            const requestIndex = allRequests.findIndex(r => r.id === requestId);
-            if (requestIndex !== -1) {
-              allRequests[requestIndex].status = "paid";
-            }
-            
-            updateRequestsTable();
             showNotification("Request approved");
           });
         });
@@ -1423,14 +1253,6 @@
           btn.addEventListener('click', async () => {
             const requestId = btn.getAttribute('data-id');
             await updateWithdrawalRequest(requestId, { status: "rejected" });
-            
-            // Update local data
-            const requestIndex = allRequests.findIndex(r => r.id === requestId);
-            if (requestIndex !== -1) {
-              allRequests[requestIndex].status = "rejected";
-            }
-            
-            updateRequestsTable();
             showNotification("Request rejected");
           });
         });
@@ -1439,11 +1261,6 @@
           btn.addEventListener('click', async () => {
             const requestId = btn.getAttribute('data-id');
             await deleteWithdrawalRequest(requestId);
-            
-            // Remove from local array
-            allRequests = allRequests.filter(r => r.id !== requestId);
-            
-            updateRequestsTable();
             showNotification("Request deleted");
           });
         });
@@ -1575,29 +1392,14 @@
             return clickDate === today;
           }).length : 0;
           
-          // Get referral stats
-          const referralCount = user.referrals ? user.referrals.length : 0;
-          const referralEarnings = user.referralEarnings || 0;
-          
           userItem.innerHTML = `
             <div class="user-info">
-              <div class="user-name">${user.name || 'Unknown'} ${user.isBlocked ? '🔴' : '🟢'}</div>
-              <div class="user-id">@${user.username || 'no_username'} | ${user.userId}</div>
+              <div class="user-name">${user.name} ${user.isBlocked ? '🔴' : '🟢'}</div>
+              <div class="user-id">@${user.username} | ${user.userId}</div>
               ${user.country && user.country !== "Unknown" ? `<div><img src="${flagUrl}" class="flag-icon" alt="${user.country}"> ${user.country}</div>` : '<div>Country: Not detected</div>'}
-              <div class="user-ip">IP: ${user.ip || 'Not available'}</div>
-              <div class="last-active">Last Active: ${getLastActiveTime(user)}</div>
               <div style="font-size: 12px; color: #666;">Watched: <strong>${todayAds}</strong>/${dailyTaskLimit}</div>
               <div style="font-size: 12px; color: #666;">Clicks: <strong>${todayClicks}</strong></div>
-              <div class="referral-stats">
-                <div class="referral-stat">
-                  <div class="referral-stat-value">${referralCount}</div>
-                  <div>Referrals</div>
-                </div>
-                <div class="referral-stat">
-                  <div class="referral-stat-value">৳${referralEarnings.toFixed(2)}</div>
-                  <div>Ref Earnings</div>
-                </div>
-              </div>
+              <div style="font-size: 12px; color: #666;">IP: ${user.ip}</div>
               <div class="balance-display">Balance: ৳${(user.balance || 0).toFixed(2)}</div>
             </div>
             <div class="user-actions">
@@ -1656,18 +1458,15 @@
       }
       
       async function blockUser(userId, block) {
-        const user = allUsers.find(u => u.id === userId);
-        if (!user) return;
-        
-        // Update user in allUsers
-        const userIndex = allUsers.findIndex(u => u.id === userId);
-        allUsers[userIndex].isBlocked = block;
-        
-        // Update in Firebase
-        await updateUserInAllUsers(userId, { isBlocked: block });
-        
-        showNotification(`User ${block ? "blocked" : "unblocked"} successfully`);
-        renderUsersList();
+        try {
+          await db.collection("users").doc(userId).update({ 
+            isBlocked: block 
+          });
+          showNotification(`User ${block ? "blocked" : "unblocked"} successfully`);
+        } catch (error) {
+          console.error("Error blocking user:", error);
+          showNotification("Error updating user", false);
+        }
       }
       
       function showUserDetails(userId) {
@@ -1709,15 +1508,9 @@
         const totalAds = user.adHistory ? user.adHistory.length : 0;
         const totalClicks = user.adClickHistory ? user.adClickHistory.length : 0;
         
-        // Get referral stats
-        const referralCount = user.referrals ? user.referrals.length : 0;
-        const referralEarnings = user.referralEarnings || 0;
-        const referredBy = user.referredBy || 'Not referred';
-        
-        // Format activity log properly - show last 20 activities
+        // Format activity log properly
         let activityLogHTML = '<p>No activity history</p>';
         if (user.activityLog && user.activityLog.length > 0) {
-          const recentActivities = user.activityLog.slice(-20).reverse();
           activityLogHTML = `
             <table class="user-activity-table">
               <thead>
@@ -1729,7 +1522,7 @@
                 </tr>
               </thead>
               <tbody>
-                ${recentActivities.map(activity => `
+                ${user.activityLog.slice(-5).map(activity => `
                   <tr>
                     <td>${new Date(activity.date).toLocaleString()}</td>
                     <td><span class="activity-badge activity-${activity.type}">${activity.type}</span></td>
@@ -1750,14 +1543,20 @@
             </span>
           </div>
           <div>
-            <strong>IP Address:</strong> <span class="user-ip">${user.ip || 'N/A'}</span>
+            <strong>Name:</strong> ${user.name}
+          </div>
+          <div>
+            <strong>Username:</strong> @${user.username}
+          </div>
+          <div>
+            <strong>User ID:</strong> ${user.userId}
+          </div>
+          <div>
+            <strong>IP Address:</strong> <span class="user-ip">${user.ip}</span>
           </div>
           <div>
             <strong>Country:</strong> 
             ${user.country && user.country !== "Unknown" && flagUrl ? `<img src="${flagUrl}" class="flag-icon" alt="${user.country}"> ${user.country}` : 'N/A'}
-          </div>
-          <div>
-            <strong>Last Active:</strong> ${getLastActiveTime(user)}
           </div>
           <div>
             <strong>Ads Today:</strong> ${todayAds}/${dailyTaskLimit} watched, ${todayClicks} clicks
@@ -1766,16 +1565,16 @@
             <strong>Total Ads:</strong> ${totalAds} watched, ${totalClicks} clicks
           </div>
           <div>
-            <strong>Referrals:</strong> ${referralCount} users, Earnings: ৳${referralEarnings.toFixed(2)}
+            <strong>Balance:</strong> ৳${(user.balance || 0).toFixed(2)}
           </div>
           <div>
-            <strong>Referred By:</strong> ${referredBy}
+            <strong>Last Login:</strong> ${user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'N/A'}
           </div>
           <div>
             <strong>Registration Date:</strong> ${user.registrationDate ? new Date(user.registrationDate).toLocaleString() : 'N/A'}
           </div>
           
-          <h4 style="margin-top: 15px;">Recent Activity (Last 20)</h4>
+          <h4 style="margin-top: 15px;">Activity History</h4>
           ${activityLogHTML}
         `;
         
@@ -1872,15 +1671,13 @@
         totalWithdrawalsEl.textContent = allRequests.length;
       }
 
-      // Admin
+      // Admin login
       adminLoginBtn.onclick = ()=>{
         const pass=document.getElementById("admin-password").value;
         if(pass==="eatt7242888"){
           isAdminLoggedIn = true;
           adminControls.classList.remove("hidden-section");
-          // Set the current per-ad rate in the admin input
-          perAdRateInput.value = perAdRate.toFixed(2);
-          dailyTaskLimitInput.value = dailyTaskLimit;
+          adminLoginForm.classList.add("hidden-section");
           showNotification("✅ Admin logged in");
         } else {
           showNotification("❌ Wrong password",false);
@@ -1888,12 +1685,7 @@
       };
       
       saveSettingsBtn.onclick = async ()=>{
-        perAdRate = parseFloat(perAdRateInput.value)||0.06;
-        dailyTaskLimit = parseInt(dailyTaskLimitInput.value)||1234;
-        
-        // Save to Firebase
         await saveSettings();
-        
         showNotification("✅ Settings saved");
       };
       
@@ -1930,10 +1722,9 @@
         renderUsersList();
       });
 
-      // Init
+      // Initialize
       loadData();
     });
   </script>
 </body>
 </html>
-[file content end]
