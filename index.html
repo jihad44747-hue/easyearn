@@ -1,1705 +1,1592 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Earn Now - Watch Ads & Earn Money</title>
-  
-  <!-- Auruads Script -->
-  <script src="https://auruads.com/cdn/ads.js?app_uid=5939"></script>
-  
-  <!-- Firebase SDK -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Earn Now - User</title>
+
+  <!-- Telegram Web App -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <!-- AdExora Ad Script -->
+  <script src="https://adexora.com/cdn/ads.js?id=516 "></script>
+
+  <!-- Firebase (compat - works with older code patterns) -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-  
+
   <style>
-    :root {
-      --primary: #6a11cb;
-      --secondary: #2575fc;
-      --success: #4caf50;
-      --warning: #ff9800;
-      --danger: #f44336;
-      --light: #f8f9fa;
-      --dark: #343a40;
-      --text: #333;
-      --text-light: #6c757d;
+    :root{
+      --primary-gradient: linear-gradient(135deg,#6a11cb 0%,#2575fc 100%);
+      --card-bg: rgba(255,255,255,0.95);
+      --glass-bg: rgba(255,255,255,0.12);
+      --text-dark: #222;
+      --accent: #6a11cb;
+      --success: #28a745;
+      --danger: #dc3545;
+      --warning: #ffc107;
+      --info: #17a2b8;
     }
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Inter,Segoe UI,Roboto,Arial;}
+    body{background:var(--primary-gradient);min-height:100vh;padding:20px;color:var(--text-dark);display:flex;justify-content:center;}
+    .app{width:100%;max-width:520px;background:var(--glass-bg);border-radius:16px;padding-bottom:30px;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,0.18);border:1px solid rgba(255,255,255,0.08);}
+    header{background:linear-gradient(135deg,#2575fc 0%,#6a11cb 100%);color:#fff;padding:26px;text-align:center;}
+    header h1{font-size:22px;margin-bottom:6px;}
+    .balance-card{background:var(--card-bg);margin:18px auto;padding:18px;border-radius:12px;width:88%;text-align:center;box-shadow:0 6px 18px rgba(0,0,0,0.08);}
+    .balance-amount{font-size:34px;color:var(--accent);font-weight:800;}
+    .content{padding:18px;}
+    .section{background:var(--card-bg);padding:18px;border-radius:12px;margin-bottom:14px;box-shadow:0 6px 18px rgba(0,0,0,0.06);}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:12px 14px;border-radius:10px;border:0;cursor:pointer;font-weight:700;transition:all 0.3s ease;}
+    .btn:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.15);}
+    .btn-primary{background:linear-gradient(90deg,#6a11cb,#2575fc);color:#fff;}
+    .btn-secondary{background:#fff;border:1px solid #e6e6e6;color:#333;}
+    .btn-success{background:linear-gradient(90deg,#28a745,#20c997);color:#fff;}
+    .btn-warning{background:linear-gradient(90deg,#ffc107,#fd7e14);color:#fff;}
+    .task-info{display:flex;justify-content:space-between;margin-top:10px;color:#666;font-size:13px;flex-wrap:wrap;}
+    .task-info > div {margin-right:10px;}
+    .task-progress{height:8px;background:#eee;border-radius:6px;margin-top:10px;overflow:hidden;}
+    .task-bar{height:100%;background:linear-gradient(90deg,#6a11cb,#2575fc);width:0%}
+    .withdrawal-form{margin-top:12px}
+    .method-cards{display:flex;gap:8px;flex-wrap:wrap}
+    .method-card{padding:10px;border-radius:10px;border:1px solid #e9e9e9;min-width:90px;text-align:center;cursor:pointer;background:#fff;transition:all 0.2s ease;}
+    .method-card:hover{transform:translateY(-2px);box-shadow:0 4px 8px rgba(0,0,0,0.1);}
+    .method-card.selected{border-color:var(--accent);background:rgba(106,17,203,0.06)}
+    .amount-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+    .amount-btn{padding:10px;border-radius:8px;border:1px solid #eee;background:#fff;cursor:pointer;font-weight:700;transition:all 0.2s ease;}
+    .amount-btn:hover{transform:translateY(-2px);box-shadow:0 2px 4px rgba(0,0,0,0.1);}
+    .amount-btn.selected{border-color:var(--accent);background:rgba(106,17,203,0.06)}
+    .input{width:100%;padding:12px;border-radius:10px;border:1px solid #e9e9e9;margin-top:8px}
+    .history-item{display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:8px;background:#fff;margin-bottom:8px;border:1px solid #f3f3f3}
+    .status-badge{padding:6px 10px;border-radius:18px;font-weight:700;font-size:12px}
+    .status-pending{background:#fff3cd;color:#856404}
+    .status-paid{background:#d4edda;color:#155724}
+    .status-rejected{background:#f8d7da;color:#721c24}
+    .notification{position:fixed;top:20px;right:20px;padding:12px 16px;border-radius:10px;color:#fff;display:none;z-index:3000}
+    .firebase-loading{position:fixed;left:0;top:0;width:100%;height:100%;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.5);z-index:4000}
     
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
+    /* Ad Modal Styles - from indexx.html */
+    .ad-modal{position:fixed;left:0;top:0;width:100%;height:100%;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);z-index:3500}
+    .ad-box{background:#fff;padding:20px;border-radius:12px;width:92%;max-width:360px;text-align:center}
+    .small{font-size:13px;color:#666}
     
-    body {
-      background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
-      min-height: 100vh;
-      padding: 20px;
-      color: var(--text);
-    }
+    /* Animation for spin */
+    @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
     
-    .app-container {
-      max-width: 400px;
-      margin: 0 auto;
-      background: white;
-      border-radius: 20px;
-      overflow: hidden;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-    }
+    /* New styles for community and referral sections */
+    .community-section {display:flex;flex-direction:column;gap:12px;margin-top:12px;}
+    .community-btn {width:100%;justify-content:center;text-align:center;}
+    .referral-section {margin-top:16px;}
+    .referral-code {background:#f8f9fa;padding:14px;border-radius:10px;margin-top:10px;text-align:center;border:1px dashed #ddd;}
+    .referral-code-text {font-size:18px;font-weight:800;letter-spacing:1px;color:var(--accent);margin:8px 0;}
+    .referral-stats {display:flex;justify-content:space-around;margin-top:14px;text-align:center;}
+    .stat-box {flex:1;padding:10px;}
+    .stat-value {font-size:20px;font-weight:800;color:var(--accent);}
+    .stat-label {font-size:12px;color:#666;}
+    .referral-instructions {margin-top:14px;padding:12px;background:#f0f8ff;border-radius:8px;border-left:4px solid var(--accent);}
+    .referral-instructions ol {padding-left:20px;margin-top:8px;}
+    .referral-instructions li {margin-bottom:6px;}
     
-    header {
-      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-      color: white;
-      padding: 20px;
-      text-align: center;
-    }
+    /* New styles for referral bonuses */
+    .referral-bonus-section {margin-top:16px;padding:12px;background:#f8f9fa;border-radius:8px;border:1px solid #e9ecef;}
+    .bonus-claim-btn {width:100%;margin-top:10px;}
     
-    .balance-section {
-      text-align: center;
-      padding: 15px;
-      background: rgba(255,255,255,0.1);
-      border-radius: 15px;
-      margin-top: 10px;
-    }
-    
-    .balance-amount {
-      font-size: 36px;
-      font-weight: 700;
-      margin: 10px 0;
-    }
-    
-    .balance-label {
-      font-size: 14px;
-      opacity: 0.9;
-    }
-    
-    .date-display {
-      font-size: 14px;
-      opacity: 0.8;
-      margin-top: 5px;
-    }
-    
-    .content-section {
-      padding: 20px;
-    }
-    
-    .section-title {
-      font-size: 18px;
-      margin-bottom: 15px;
-      color: var(--primary);
-      display: flex;
-      align-items: center;
-    }
-    
-    .section-title::before {
-      content: '';
-      display: inline-block;
-      width: 6px;
-      height: 20px;
-      background: var(--primary);
-      border-radius: 10px;
-      margin-right: 10px;
-    }
-    
-    .card {
-      background: var(--light);
-      border-radius: 15px;
-      padding: 15px;
-      margin-bottom: 15px;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.05);
-    }
-    
-    .ad-system-status {
-      display: flex;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-    
-    .status-indicator {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      margin-right: 10px;
-    }
-    
-    .status-ready {
-      background: var(--success);
-    }
-    
-    .btn {
-      display: block;
-      width: 100%;
-      padding: 15px;
-      border-radius: 12px;
-      border: none;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      text-align: center;
-      margin-top: 10px;
-    }
-    
-    .btn-primary {
-      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-      color: white;
-      box-shadow: 0 4px 15px rgba(106, 17, 203, 0.3);
-    }
-    
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(106, 17, 203, 0.4);
-    }
-    
-    .btn-success {
-      background: linear-gradient(135deg, #28a745, #20c997);
-      color: white;
-      box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
-    }
-    
-    .btn-warning {
-      background: linear-gradient(135deg, #ffc107, #fd7e14);
-      color: white;
-      box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
-    }
-    
-    .btn:disabled {
-      background: #ccc;
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
-    }
-    
-    .stats-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 10px;
-    }
-    
-    .stat-item {
-      text-align: center;
-      padding: 10px;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    }
-    
-    .stat-value {
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--primary);
-    }
-    
-    .stat-label {
-      font-size: 12px;
-      color: var(--text-light);
-    }
-    
-    .referral-section {
-      text-align: center;
-    }
-    
-    .referral-code {
-      background: white;
-      border: 2px dashed var(--primary);
-      border-radius: 10px;
-      padding: 15px;
-      margin: 15px 0;
-      font-size: 20px;
-      font-weight: 700;
-      color: var(--primary);
-    }
-    
-    .btn-group {
-      display: flex;
-      gap: 10px;
-    }
-    
-    .btn-secondary {
-      background: white;
-      color: var(--primary);
-      border: 2px solid var(--primary);
-    }
-    
-    .referral-stats {
-      display: flex;
-      justify-content: space-around;
-      margin: 15px 0;
-    }
-    
-    .referral-stat {
-      text-align: center;
-    }
-    
-    .referral-count {
-      font-size: 24px;
-      font-weight: 700;
-      color: var(--primary);
-    }
-    
-    .referral-label {
-      font-size: 12px;
-      color: var(--text-light);
-    }
-    
-    .bonus-item {
-      display: flex;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-    
-    .bonus-check {
-      margin-right: 10px;
-      color: var(--success);
-    }
-    
-    .bonus-text {
-      flex: 1;
-    }
-    
-    .withdrawal-methods {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin: 15px 0;
-    }
-    
-    .method-item {
-      background: white;
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      padding: 10px;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-    
-    .method-item.selected {
-      border-color: var(--primary);
-      background: rgba(106, 17, 203, 0.05);
-    }
-    
-    .method-icon {
-      font-size: 24px;
-      margin-bottom: 5px;
-    }
-    
-    .method-name {
-      font-size: 12px;
-      font-weight: 600;
-    }
-    
-    .amount-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin: 15px 0;
-    }
-    
-    .amount-option {
-      background: white;
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      padding: 10px;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-    
-    .amount-option.selected {
-      border-color: var(--primary);
-      background: rgba(106, 17, 203, 0.05);
-    }
-    
-    .custom-amount {
-      width: 100%;
-      padding: 12px;
-      border-radius: 10px;
-      border: 1px solid #ddd;
-      font-size: 16px;
-      margin: 10px 0;
-    }
-    
-    .history-section {
-      margin-top: 20px;
-    }
-    
-    .history-item {
-      display: flex;
-      justify-content: space-between;
-      padding: 12px 0;
-      border-bottom: 1px solid #eee;
-    }
-    
-    .history-details {
-      flex: 1;
-    }
-    
-    .history-method {
-      font-weight: 600;
-    }
-    
-    .history-date {
-      font-size: 12px;
-      color: var(--text-light);
-    }
-    
-    .history-amount {
-      font-weight: 700;
-      color: var(--primary);
-    }
-    
-    .history-status {
-      font-size: 12px;
-      padding: 3px 8px;
-      border-radius: 10px;
-      margin-left: 10px;
-    }
-    
-    .status-pending {
-      background: #fff3cd;
-      color: #856404;
-    }
-    
-    .status-paid {
-      background: #d4edda;
-      color: #155724;
-    }
-    
-    .status-rejected {
-      background: #f8d7da;
-      color: #721c24;
-    }
-    
-    .notification {
+    /* Share modal styles */
+    .share-modal {
       position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 15px 20px;
-      background: var(--success);
-      color: #fff;
-      border-radius: 12px;
-      display: none;
-      z-index: 2000;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.15);
-      animation: slideIn 0.3s ease;
-    }
-    
-    @keyframes slideIn {
-      from { transform: translateX(100px); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
-    }
-    
-    .loading {
-      display: none;
-      position: fixed;
-      top: 0;
       left: 0;
+      top: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,0.7);
-      z-index: 3000;
-      justify-content: center;
-      align-items: center;
-      color: white;
-      font-size: 18px;
-    }
-    
-    .ad-container {
       display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.9);
-      z-index: 4000;
-      justify-content: center;
       align-items: center;
-      flex-direction: column;
-      color: white;
+      justify-content: center;
+      background: rgba(0,0,0,0.6);
+      z-index: 3500;
     }
     
-    .ad-timer {
-      font-size: 24px;
+    .share-box {
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      width: 92%;
+      max-width: 360px;
+      text-align: center;
+    }
+    
+    .share-options {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
       margin: 20px 0;
+      flex-wrap: wrap;
     }
     
-    .ad-close {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background: rgba(255,255,255,0.2);
-      border: none;
-      color: white;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      font-size: 20px;
-      cursor: pointer;
-      display: none;
-    }
-    
-    .ad-reward {
-      font-size: 18px;
-      margin-top: 20px;
-    }
-    
-    .country-restriction-warning {
-      background: #fff3cd;
-      border: 1px solid #ffeaa7;
-      border-radius: 10px;
-      padding: 15px;
-      margin-bottom: 15px;
-      text-align: center;
-      color: #856404;
-    }
-
-    /* Community Section Enhancements */
-    .community-stats {
+    .share-option {
       display: flex;
-      justify-content: space-around;
-      margin-top: 15px;
-      text-align: center;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      padding: 10px;
+      border-radius: 10px;
+      transition: all 0.2s ease;
     }
     
-    .community-benefits {
-      margin-top: 15px;
-      padding: 12px;
-      background: #f0f8ff;
-      border-radius: 8px;
-      border-left: 4px solid var(--primary);
+    .share-option:hover {
+      background: #f5f5f5;
+      transform: translateY(-2px);
     }
     
-    .community-benefits ul {
-      font-size: 13px;
-      color: #555;
-      padding-left: 20px;
-    }
-    
-    .community-benefits li {
-      margin-bottom: 6px;
+    .share-icon {
+      font-size: 30px;
+      margin-bottom: 8px;
     }
 
-    /* Improved Ad System Styles */
-    .ad-system-message {
-      text-align: center;
-      padding: 10px;
-      margin: 10px 0;
+    /* Ad status styles */
+    .ad-status-indicator {
+      padding: 8px 12px;
       border-radius: 8px;
-      font-weight: 500;
+      margin: 10px 0;
+      text-align: center;
+      font-weight: 600;
+      font-size: 14px;
     }
-    
-    .ad-system-message.success {
-      background-color: #d4edda;
+
+    .ad-status-ready {
+      background: #d4edda;
       color: #155724;
       border: 1px solid #c3e6cb;
     }
-    
-    .ad-system-message.warning {
-      background-color: #fff3cd;
+
+    .ad-status-warning {
+      background: #fff3cd;
       color: #856404;
       border: 1px solid #ffeaa7;
     }
-    
-    .ad-system-message.error {
-      background-color: #f8d7da;
+
+    .ad-status-error {
+      background: #f8d7da;
       color: #721c24;
       border: 1px solid #f5c6cb;
     }
-    
-    .ad-system-message.info {
-      background-color: #d1ecf1;
-      color: #0c5460;
-      border: 1px solid #bee5eb;
+
+    /* Ad info section */
+    .ad-info-section {
+      background: #f8f9fa;
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 10px;
+      border-left: 4px solid #6a11cb;
     }
 
-    /* Referral Section Styles */
-    .small {
-      font-size: 14px;
-      color: var(--text-light);
-      margin-bottom: 10px;
+    .ad-info-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+      font-size: 13px;
     }
-    
-    .stat-box {
-      text-align: center;
-      padding: 10px;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+
+    .ad-info-label {
+      color: #666;
     }
-    
-    .referral-bonus-section {
-      margin-top: 15px;
-      padding: 15px;
-      background: #fff8e1;
-      border-radius: 10px;
-      border: 1px solid #ffeaa7;
-    }
-    
-    .bonus-claim-btn {
-      margin-top: 10px;
+
+    .ad-info-value {
       font-weight: 600;
+      color: #333;
     }
   </style>
 </head>
 <body>
-  <div class="loading" id="loading">
-    <div style="text-align: center;">
-      <div style="font-size: 48px; margin-bottom: 10px;">⏳</div>
-      <p>Connecting to server...</p>
+  <div class="firebase-loading" id="firebaseLoading">
+    <div style="text-align:center;color:white">
+      <div style="width:48px;height:48px;border:4px solid rgba(255,255,255,0.2);border-top-color:#fff;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 10px"></div>
+      <div>Loading...</div>
     </div>
-  </div>
-
-  <div class="ad-container" id="adContainer">
-    <button class="ad-close" id="adClose">✕</button>
-    <div style="font-size: 48px; margin-bottom: 10px;">📺</div>
-    <h2>Watching Ad</h2>
-    <div class="ad-timer" id="adTimer">6</div>
-    <p>Please wait while the ad loads...</p>
-    <div class="ad-reward" id="adReward">Earning: ৳0.06</div>
   </div>
 
   <div class="notification" id="notification"></div>
 
-  <div class="app-container" id="appContainer">
+  <!-- Ad Modal - from indexx.html -->
+  <div class="ad-modal" id="adModal">
+    <div class="ad-box">
+      <h3>Advertisement</h3>
+      <div style="margin:16px 0">
+        <div style="width:48px;height:48px;border:4px solid #eee;border-top-color:#6a11cb;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto"></div>
+      </div>
+      <div id="adStatus" class="small">Playing ad...</div>
+      <div style="margin-top:16px"><button id="adDoneBtn" class="btn btn-primary" style="display:none">OK</button></div>
+    </div>
+  </div>
+
+  <div class="app" role="application">
     <header>
       <h1>Earn Now</h1>
-      <div class="balance-section">
-        <div class="balance-label">Your Balance</div>
-        <div class="balance-amount" id="balanceAmount">৳0.00</div>
-        <div class="date-display" id="currentDate">Sun Oct 12 2025</div>
+      <div class="balance-card">
+        <div class="small">Your Balance</div>
+        <div class="balance-amount">৳ <span id="balance">0.00</span></div>
+        <div class="small" id="current-date"></div>
       </div>
     </header>
 
-    <div class="content-section">
-      <div id="countryRestrictionWarning" class="country-restriction-warning" style="display: none;">
-        <strong>Country Restriction</strong><br>
-        This app is not available in your country.
-      </div>
-      
-      <!-- Enhanced Ad System Section -->
-      <div class="card">
-        <div class="section-title">🎥 Watch & Earn Points</div>
+    <div class="content">
+      <div class="section">
+        <h3>Watch Ads & Earn</h3>
         
-        <div class="ad-system-status">
-          <div class="status-indicator status-ready"></div>
-          <div>Ad system ready (min 6s)</div>
+        <!-- Add ad status indicator -->
+        <div id="adStatusIndicator" class="ad-status-indicator ad-status-ready">
+          ✅ Ad system ready
         </div>
         
-        <button class="btn btn-primary" id="watchBtn">
-          📺 Watch Ad & Earn ৳<span id="perAdRate">0.06</span>
-        </button>
-        
-        <div class="ad-system-message" id="adSystemMessage" style="display: none;"></div>
-        
-        <div style="font-size: 14px; color: var(--text-light); margin-top: 10px;">
-          Minimum watch time: 6 seconds
+        <div style="margin-top:12px">
+          <button id="watchAdBtn" class="btn btn-primary">👁️ Watch Ad & Earn ৳<span id="perAd">0.06</span></button>
         </div>
         
-        <div class="stats-grid">
-          <div class="stat-item">
-            <div class="stat-value" id="todayAds">0/<span id="dailyTaskLimit">1234</span></div>
-            <div class="stat-label">Today's ads</div>
+        <!-- Add ad info section -->
+        <div class="ad-info-section">
+          <div class="ad-info-item">
+            <span class="ad-info-label">Minimum watch time:</span>
+            <span class="ad-info-value" id="minWatchTime">6 seconds</span>
           </div>
-          <div class="stat-item">
-            <div class="stat-value" id="adClicks">0</div>
-            <div class="stat-label">Ad clicks</div>
+          <div class="ad-info-item">
+            <span class="ad-info-label">Today's ads:</span>
+            <span class="ad-info-value"><span id="todayCount">0</span>/<span id="dailyLimit">10</span></span>
+          </div>
+          <div class="ad-info-item">
+            <span class="ad-info-label">Ad clicks:</span>
+            <span class="ad-info-value" id="todayClicks">0</span>
           </div>
         </div>
         
-        <div style="font-size: 14px; color: var(--text-light); margin-top: 10px;">
-          Resets in <span id="resetTime">17h 20m</span>
+        <div class="task-info">
+          <div id="resetTime" class="small">Resets in 24h</div>
         </div>
+        <div class="task-progress" aria-hidden="true"><div id="taskBar" class="task-bar"></div></div>
       </div>
-      
-      <!-- Updated Community Section -->
-      <div class="card">
-        <div class="section-title">Join Our Community</div>
-        
+
+      <!-- New Community Section -->
+      <div class="section">
+        <h3>Join Our Community</h3>
         <div class="community-section">
-          <button id="joinChannelBtn" class="btn" style="margin-bottom: 10px; background: linear-gradient(135deg, #28a745, #20c997); color: white;">
-            <span id="channelIcon">📢</span> 
-            <span id="channelText">Join Our Channel</span>
-            <span id="channelCheck" style="display:none">✅</span>
-          </button>
+          <button id="joinChannelBtn" class="btn btn-success community-btn">📢 Join Our Channel</button>
+          <button id="joinGroupBtn" class="btn btn-warning community-btn">💬 Join Support Group</button>
+        </div>
+      </div>
+
+      <!-- New Referral Section -->
+      <div class="section">
+        <h3>Refer & Earn</h3>
+        <div class="referral-section">
+          <div class="small">Invite friends and earn ৳1 for each successful referral!</div>
           
-          <button id="joinGroupBtn" class="btn" style="background: linear-gradient(135deg, #ffc107, #fd7e14); color: white;">
-            <span id="groupIcon">💬</span> 
-            <span id="groupText">Join Support Group</span>
-            <span id="groupCheck" style="display:none">✅</span>
-          </button>
-        </div>
-        
-        <!-- Community Stats -->
-        <div class="community-stats">
-          <div class="stat">
-            <div style="font-size: 20px; font-weight: 800; color: var(--primary);" id="channelMembers">2.5K+</div>
-            <div style="font-size: 12px; color: #666;">Channel Members</div>
+          <div class="referral-code">
+            <div class="small">Your Referral Code:</div>
+            <div class="referral-code-text" id="referralCode">LOADING...</div>
+            <button id="copyRefCode" class="btn btn-primary" style="margin-top:8px">📋 Copy Code</button>
+            <button id="shareRefLink" class="btn btn-success" style="margin-top:8px">🔗 Share Referral Link</button>
           </div>
-          <div class="stat">
-            <div style="font-size: 20px; font-weight: 800; color: var(--primary);" id="groupMembers">1.8K+</div>
-            <div style="font-size: 12px; color: #666;">Group Members</div>
+          
+          <div class="referral-stats">
+            <div class="stat-box">
+              <div class="stat-value" id="refCount">0</div>
+              <div class="stat-label">Referrals</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-value">৳<span id="refEarnings">0</span></div>
+              <div class="stat-label">Earned</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-value" id="pendingBonus">0</div>
+              <div class="stat-label">Pending Bonus</div>
+            </div>
           </div>
-        </div>
-        
-        <!-- Community Benefits -->
-        <div class="community-benefits">
-          <div style="font-size: 14px; font-weight: 700; margin-bottom: 8px;">Community Benefits:</div>
-          <ul>
-            <li>Get daily earning tips & tricks</li>
-            <li>Exclusive bonus opportunities</li>
-            <li>Instant support for any issues</li>
-            <li>First to know about new features</li>
-          </ul>
+          
+          <!-- Referral Bonus Claim Section -->
+          <div class="referral-bonus-section">
+            <div class="small" style="font-weight:700">Referral Bonuses:</div>
+            <div class="small" style="margin-top:8px">
+              <div>🎁 New referral bonus: ৳1 (auto credit)</div>
+              <div>💰 10 TK balance bonus: ৳2 (claimable once per referral)</div>
+            </div>
+            <button id="claimRefBonus" class="btn btn-warning bonus-claim-btn">💰 Claim Referral Bonuses (৳<span id="claimableAmount">0</span>)</button>
+          </div>
+          
+          <div class="referral-instructions">
+            <div class="small" style="font-weight:700">How to refer:</div>
+            <ol class="small">
+              <li>Share your referral link with friends</li>
+              <li>They need to open the link and use the mini app</li>
+              <li>You get ৳1 when they join through your link</li>
+              <li>When their balance reaches ৳10, you can claim ৳2 bonus</li>
+            </ol>
+          </div>
         </div>
       </div>
-      
-      <!-- ==== REFER & EARN SECTION START ==== -->
-      <div class="card referral-section">
-        <div class="section-title">Refer & Earn</div>
-        <div class="small">Invite friends and earn ৳1 instantly + ৳2 bonus later!</div>
 
-        <div class="referral-code">
-          <div class="small">Your Referral Code:</div>
-          <div class="referral-code-text" id="referralCode">LOADING...</div>
-          <div class="btn-group">
-            <button id="copyCode" class="btn btn-primary">📋 Copy Code</button>
-            <button id="shareLink" class="btn btn-success">🔗 Share Link</button>
-          </div>
+      <div class="section">
+        <h3>Withdraw Money</h3>
+        <div style="margin-top:10px">
+          <button id="toggleWithdraw" class="btn btn-secondary">💸 Request Withdrawal</button>
         </div>
 
-        <div class="referral-stats">
-          <div class="stat-box">
-            <div class="stat-value" id="refCount">0</div>
-            <div class="stat-label">Referrals</div>
+        <div id="withdrawForm" class="withdrawal-form" style="display:none">
+          <div style="margin-top:10px">
+            <div class="small">Select Method</div>
+            <div id="methodCards" class="method-cards" style="margin-top:8px"></div>
           </div>
-          <div class="stat-box">
-            <div class="stat-value">৳<span id="refEarned">0</span></div>
-            <div class="stat-label">Earned</div>
+
+          <div style="margin-top:12px">
+            <div class="small">Account / Mobile Number</div>
+            <input id="accountNumber" class="input" placeholder="Enter number (e.g. 01XXXXXXXXX)">
+          </div>
+
+          <div style="margin-top:12px">
+            <div class="small">Select Amount</div>
+            <div class="amount-grid" id="amountGrid">
+              <button class="amount-btn" data-amount="20">৳20</button>
+              <button class="amount-btn" data-amount="50">৳50</button>
+              <button class="amount-btn" data-amount="100">৳100</button>
+              <button class="amount-btn" data-amount="200">৳200</button>
+              <button class="amount-btn" data-amount="300">৳300</button>
+              <button class="amount-btn" data-amount="500">৳500</button>
+            </div>
+            <input id="withdrawAmount" type="number" class="input" placeholder="Or enter custom amount (20 - 500)" min="20" max="500" style="margin-top:8px">
+          </div>
+
+          <div style="margin-top:14px">
+            <button id="submitWithdraw" class="btn btn-primary">✅ Submit Request</button>
           </div>
         </div>
 
-        <div class="referral-bonus-section">
-          <div class="small" style="font-weight:700;">Referral Bonus</div>
-          <div class="small" style="margin-top:6px;">🎁 ৳1 for each new user</div>
-          <div class="small">💰 ৳2 bonus when their balance reaches ৳10</div>
-          <button id="claimBonus" class="btn btn-warning bonus-claim-btn">💸 Claim Bonus (<span id="claimable">0</span>৳)</button>
-        </div>
-      </div>
-      <!-- ==== REFER & EARN SECTION END ==== -->
-      
-      <div class="card">
-        <div class="section-title">Withdraw Money</div>
-        
-        <div style="margin-bottom: 15px;">
-          <div style="font-weight: 600; margin-bottom: 10px;">Select Method</div>
-          <div class="withdrawal-methods" id="withdrawalMethods">
-            <!-- Methods will be populated by JavaScript -->
-          </div>
-        </div>
-        
-        <div style="margin-bottom: 15px;">
-          <div style="font-weight: 600; margin-bottom: 5px;">Account / Mobile Number</div>
-          <input type="text" class="custom-amount" id="accountNumber" placeholder="Enter number (e.g. 01XXXXXXXXXX)">
-        </div>
-        
-        <div style="margin-bottom: 15px;">
-          <div style="font-weight: 600; margin-bottom: 10px;">Select Amount</div>
-          <div class="amount-grid" id="amountOptions">
-            <!-- Amount options will be populated by JavaScript -->
-          </div>
-          <input type="number" class="custom-amount" id="customAmount" placeholder="Or enter custom amount (20 - 500)" min="20" max="500">
-        </div>
-        
-        <button class="btn btn-primary" id="submitWithdrawalBtn">
-          Submit Request
-        </button>
-      </div>
-      
-      <div class="card history-section">
-        <div class="section-title">Withdrawal History</div>
-        <div id="withdrawalHistory">
-          <div style="text-align: center; padding: 20px; color: var(--text-light);">
-            No withdrawal history
-          </div>
-        </div>
+        <h4 style="margin-top:18px">Withdrawal History</h4>
+        <div id="historyList" style="margin-top:10px"></div>
       </div>
     </div>
   </div>
 
-  <script>
-    // Firebase configuration (same as admin panel)
-    const firebaseConfig = {
-      apiKey: "AIzaSyDp49URVg2ipSBuoEBGZyqWWyc29cxAleE",
-      authDomain: "easy-earn-af82c.firebaseapp.com",
-      projectId: "easy-earn-af82c",
-      storageBucket: "easy-earn-af82c.firebasestorage.app",
-      messagingSenderId: "572340074151",
-      appId: "1:572340074151:web:778d58946c1163427acd82",
-      measurementId: "G-3RFZSPZD9W"
-    };
-
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-
-    document.addEventListener("DOMContentLoaded", function() {
-      // DOM Elements
-      const appContainer = document.getElementById("appContainer");
-      const balanceAmount = document.getElementById("balanceAmount");
-      const currentDate = document.getElementById("currentDate");
-      const watchBtn = document.getElementById("watchBtn");
-      const perAdRate = document.getElementById("perAdRate");
-      const todayAds = document.getElementById("todayAds");
-      const dailyTaskLimit = document.getElementById("dailyTaskLimit");
-      const adClicks = document.getElementById("adClicks");
-      const resetTime = document.getElementById("resetTime");
-      const referralCode = document.getElementById("referralCode");
-      const copyCodeBtn = document.getElementById("copyCode");
-      const shareLinkBtn = document.getElementById("shareLink");
-      const refCount = document.getElementById("refCount");
-      const refEarned = document.getElementById("refEarned");
-      const claimBonusBtn = document.getElementById("claimBonus");
-      const claimableAmount = document.getElementById("claimable");
-      const withdrawalMethods = document.getElementById("withdrawalMethods");
-      const accountNumber = document.getElementById("accountNumber");
-      const amountOptions = document.getElementById("amountOptions");
-      const customAmount = document.getElementById("customAmount");
-      const submitWithdrawalBtn = document.getElementById("submitWithdrawalBtn");
-      const withdrawalHistory = document.getElementById("withdrawalHistory");
-      const notification = document.getElementById("notification");
-      const loading = document.getElementById("loading");
-      const adContainer = document.getElementById("adContainer");
-      const adTimer = document.getElementById("adTimer");
-      const adClose = document.getElementById("adClose");
-      const adReward = document.getElementById("adReward");
-      const countryRestrictionWarning = document.getElementById("countryRestrictionWarning");
-      const adSystemMessage = document.getElementById("adSystemMessage");
-
-      // Community Section Elements
-      const joinChannelBtn = document.getElementById("joinChannelBtn");
-      const joinGroupBtn = document.getElementById("joinGroupBtn");
-      const channelIcon = document.getElementById("channelIcon");
-      const channelText = document.getElementById("channelText");
-      const channelCheck = document.getElementById("channelCheck");
-      const groupIcon = document.getElementById("groupIcon");
-      const groupText = document.getElementById("groupText");
-      const groupCheck = document.getElementById("groupCheck");
-
-      // App settings and user data
-      let appSettings = {
-        perAdRate: 0.06,
-        dailyTaskLimit: 10,
-        allowedCountries: [],
-        restrictionEnabled: false,
-        withdrawalMethods: []
-      };
+  <!-- Share Modal -->
+  <div class="share-modal" id="shareModal">
+    <div class="share-box">
+      <h3>Share Referral Link</h3>
+      <div class="small" style="margin-top:8px">Share your referral link with friends and earn money!</div>
       
-      let userData = {
-        id: null,
+      <div class="share-options">
+        <div class="share-option" id="shareTelegram">
+          <div class="share-icon">📱</div>
+          <div class="small">Telegram</div>
+        </div>
+        <div class="share-option" id="shareFacebook">
+          <div class="share-icon">👥</div>
+          <div class="small">Facebook</div>
+        </div>
+        <div class="share-option" id="shareWhatsApp">
+          <div class="share-icon">💬</div>
+          <div class="small">WhatsApp</div>
+        </div>
+        <div class="share-option" id="shareTwitter">
+          <div class="share-icon">🐦</div>
+          <div class="small">Twitter</div>
+        </div>
+        <div class="share-option" id="shareCopy">
+          <div class="share-icon">📋</div>
+          <div class="small">Copy Link</div>
+        </div>
+      </div>
+      
+      <div style="margin-top:16px">
+        <button id="closeShareModal" class="btn btn-secondary">Close</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ========== Helpers ========== */
+function showNotification(msg, success=true, ms=2200){
+  const el = document.getElementById('notification');
+  el.textContent = msg;
+  el.style.background = success ? 'linear-gradient(90deg,#28a745,#1e7e34)' : 'linear-gradient(90deg,#dc3545,#bd2130)';
+  el.style.display = 'block';
+  setTimeout(()=> el.style.display = 'none', ms);
+}
+
+/* ========== Local Balance Cache ========== */
+function getCachedBalance() {
+  try {
+    const b = localStorage.getItem('lastBalance');
+    return b ? parseFloat(b) : 0;
+  } catch(e) {
+    return 0;
+  }
+}
+
+function setCachedBalance(b) {
+  try {
+    localStorage.setItem('lastBalance', b.toFixed(2));
+  } catch(e) {}
+}
+
+/* ========== Firebase init ========== */
+const firebaseConfig = {
+  apiKey: "AIzaSyDp49URVg2ipSBuoEBGZyqWWyc29cxAleE",
+  authDomain: "easy-earn-af82c.firebaseapp.com",
+  projectId: "easy-earn-af82c",
+  storageBucket: "easy-earn-af82c.firebasestorage.app",
+  messagingSenderId: "572340074151",
+  appId: "1:572340074151:web:778d58946c1163427acd82",
+  measurementId: "G-3RFZSPZD9W"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const FieldValue = firebase.firestore.FieldValue;
+
+/* ========== App state ========== */
+let tg; // Telegram WebApp object
+let uid = null;
+let unsubscribeUser = null; // For real-time listener
+let userData = { 
+  balance: 0, 
+  adHistory: [], 
+  adClickHistory: [], 
+  activityLog: [], 
+  todayAdCount: 0, 
+  todayAdClicks: 0, 
+  lastAdReset: new Date().toDateString(),
+  totalEarned: 0,
+  totalWithdrawn: 0,
+  referralCode: '',
+  referredBy: '',
+  referrals: [],
+  referralEarnings: 0,
+  isBlocked: false,
+  // New referral bonus fields
+  referralBonuses: {},
+  claimedBonuses: []
+};
+let withdrawalMethods = [];
+let allRequests = [];
+let perAdRate = 0.06;
+let dailyLimit = 10;
+let userIP = "Unknown";
+let userCountry = "Unknown";
+
+/* ========== Ad Blocker Detection & Ad Load Status ========== */
+let adBlockerDetected = false;
+let adScriptLoaded = false;
+let minAdWatchTime = 6; // seconds - will be loaded from admin settings
+let adLoadTimeout = 8000; // ms - will be loaded from admin settings
+
+/* ========== DOM refs ========== */
+const balanceEl = () => document.getElementById('balance');
+const perAdEl = () => document.getElementById('perAd');
+const todayCountEl = () => document.getElementById('todayCount');
+const todayClicksEl = () => document.getElementById('todayClicks');
+const dailyLimitEl = () => document.getElementById('dailyLimit');
+const taskBarEl = () => document.getElementById('taskBar');
+const resetTimeEl = () => document.getElementById('resetTime');
+const watchAdBtn = () => document.getElementById('watchAdBtn');
+const toggleWithdrawBtn = () => document.getElementById('toggleWithdraw');
+const withdrawFormEl = () => document.getElementById('withdrawForm');
+const methodCardsEl = () => document.getElementById('methodCards');
+const amountGridEl = () => document.getElementById('amountGrid');
+const withdrawAmountInput = () => document.getElementById('withdrawAmount');
+const accountNumberInput = () => document.getElementById('accountNumber');
+const submitWithdrawBtn = () => document.getElementById('submitWithdraw');
+const historyListEl = () => document.getElementById('historyList');
+const firebaseLoading = () => document.getElementById('firebaseLoading');
+
+// Ad Modal DOM refs - from indexx.html
+const adModal = () => document.getElementById('adModal');
+const adStatus = () => document.getElementById('adStatus');
+const adDoneBtn = () => document.getElementById('adDoneBtn');
+
+// New DOM refs for community and referral
+const joinChannelBtn = () => document.getElementById('joinChannelBtn');
+const joinGroupBtn = () => document.getElementById('joinGroupBtn');
+const referralCodeEl = () => document.getElementById('referralCode');
+const copyRefCodeBtn = () => document.getElementById('copyRefCode');
+const shareRefLinkBtn = () => document.getElementById('shareRefLink');
+const refCountEl = () => document.getElementById('refCount');
+const refEarningsEl = () => document.getElementById('refEarnings');
+const pendingBonusEl = () => document.getElementById('pendingBonus');
+const claimRefBonusBtn = () => document.getElementById('claimRefBonus');
+const claimableAmountEl = () => document.getElementById('claimableAmount');
+
+// Share modal DOM refs
+const shareModal = () => document.getElementById('shareModal');
+const shareTelegram = () => document.getElementById('shareTelegram');
+const shareFacebook = () => document.getElementById('shareFacebook');
+const shareWhatsApp = () => document.getElementById('shareWhatsApp');
+const shareTwitter = () => document.getElementById('shareTwitter');
+const shareCopy = () => document.getElementById('shareCopy');
+const closeShareModal = () => document.getElementById('closeShareModal');
+
+// Ad status DOM refs
+const adStatusIndicator = () => document.getElementById('adStatusIndicator');
+const minWatchTimeEl = () => document.getElementById('minWatchTime');
+
+/* ========== Utility functions ========== */
+function formatDateField(d){
+  if(!d) return '';
+  if (d && typeof d.toDate === 'function') {
+    return d.toDate().toLocaleString();
+  } else if (typeof d === 'string') {
+    try { return new Date(d).toLocaleString(); } catch(e){ return d; }
+  } else if (d instanceof Date) return d.toLocaleString();
+  return String(d);
+}
+
+function updateResetTimeUI(){
+  const now = new Date();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate()+1);
+  tomorrow.setHours(0,0,0,0);
+  const diff = tomorrow - now;
+  const hrs = Math.floor(diff/(1000*60*60));
+  const mins = Math.floor((diff%(1000*60*60))/(1000*60));
+  resetTimeEl().textContent = `Resets in ${hrs}h ${mins}m`;
+}
+
+// Ad click simulation - from indexx.html
+function simulateAdClick() {
+  return new Promise((resolve) => {
+    const clicked = Math.random() < 0.7;
+    setTimeout(() => resolve(clicked), 1000);
+  });
+}
+
+// Generate referral code
+function generateReferralCode() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = '';
+  for (let i = 0; i < 6; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
+// Generate referral link
+function generateReferralLink() {
+  const botUsername = 'easyearn11_bot'; // Your actual bot username
+  return `https://t.me/${botUsername}?start=${userData.referralCode}`;
+}
+
+// Generate share text
+function generateShareText() {
+  const link = generateReferralLink();
+  return `Join EasyEarn and start earning money by watching ads! Use my referral code: ${userData.referralCode}\n\n${link}`;
+}
+
+/* ========== Ad Blocker Detection & Safety Functions ========== */
+// Check if ad blocker is detected
+function checkAdBlocker() {
+  return new Promise((resolve) => {
+    const ad = document.createElement('div');
+    ad.innerHTML = '&nbsp;';
+    ad.className = 'adsbox';
+    ad.style.position = 'absolute';
+    ad.style.left = '-9999px';
+    ad.style.top = '-9999px';
+    ad.style.width = '1px';
+    ad.style.height = '1px';
+    document.body.appendChild(ad);
+    
+    setTimeout(() => {
+      const detected = ad.offsetHeight === 0 || ad.offsetWidth === 0;
+      document.body.removeChild(ad);
+      adBlockerDetected = detected;
+      resolve(detected);
+    }, 100);
+  });
+}
+
+// Check if ad script is loaded properly
+function checkAdScript() {
+  return typeof window.showAdexora === 'function';
+}
+
+// Enhanced ad watching function with blocker detection and load checks
+async function watchAdWithSafety() {
+  // Check daily reset first
+  checkAndResetDailyCounts();
+  
+  const currentBalance = parseFloat(userData.balance || 0);
+  
+  if ((userData.todayAdCount || 0) >= dailyLimit) {
+    showNotification('You reached daily ad limit', false);
+    return false;
+  }
+
+  // Show ad modal
+  adModal().style.display = 'flex';
+  adStatus().textContent = '🔍 Checking ad availability...';
+  adDoneBtn().style.display = 'none';
+
+  try {
+    // Step 1: Check for ad blocker
+    adStatus().textContent = '🛡️ Checking for ad blocker...';
+    const hasAdBlocker = await checkAdBlocker();
+    
+    if (hasAdBlocker) {
+      adStatus().textContent = '🚫 Ad blocker detected! Please disable it.';
+      adDoneBtn().style.display = 'inline-flex';
+      showNotification('Ad blocker detected. Please disable it to watch ads.', false);
+      return false;
+    }
+
+    // Step 2: Check if ad script is loaded
+    adStatus().textContent = '⏳ Loading ad script...';
+    adScriptLoaded = checkAdScript();
+    
+    let waited = 0;
+    while (!adScriptLoaded && waited < adLoadTimeout) {
+      await new Promise(r => setTimeout(r, 200));
+      waited += 200;
+      adScriptLoaded = checkAdScript();
+    }
+
+    if (!adScriptLoaded) {
+      adStatus().textContent = '❌ Ad failed to load. Please try again.';
+      adDoneBtn().style.display = 'inline-flex';
+      showNotification('Ad failed to load. Please try again.', false);
+      return false;
+    }
+
+    // Step 3: Start ad and measure duration
+    adStatus().textContent = '🎬 Playing advertisement...';
+    const startTime = Date.now();
+    let adCompleted = false;
+    
+    try {
+      await window.showAdexora();
+      adCompleted = true;
+    } catch (error) {
+      adCompleted = false;
+      console.error('Ad play error:', error);
+    }
+    
+    const duration = Date.now() - startTime;
+    const durationSeconds = Math.floor(duration / 1000);
+
+    // Step 4: Check if ad was watched for minimum required time
+    if (adCompleted && duration >= minAdWatchTime * 1000) {
+      // Ad was completed successfully and watched for required time
+      adStatus().textContent = `✅ Ad completed! (${durationSeconds}s)`;
+      adDoneBtn().style.display = 'inline-flex';
+
+      // Update user data
+      userData.todayAdCount = (userData.todayAdCount || 0) + 1;
+      userData.balance = currentBalance + parseFloat(perAdRate);
+      userData.totalEarned = parseFloat(userData.totalEarned || 0) + parseFloat(perAdRate);
+
+      userData.adHistory = userData.adHistory || [];
+      userData.activityLog = userData.activityLog || [];
+      
+      const rec = { date: new Date().toISOString(), amount: perAdRate, duration: durationSeconds };
+      userData.adHistory.push(rec);
+      userData.activityLog.push({
+        type: 'ad', 
+        date: new Date().toISOString(), 
+        amount: perAdRate, 
+        duration: durationSeconds,
+        ip: userIP, 
+        country: userCountry 
+      });
+
+      // Simulate ad click (70% chance)
+      const adClicked = await simulateAdClick();
+      if (adClicked) {
+        userData.todayAdClicks = (userData.todayAdClicks || 0) + 1;
+        userData.adClickHistory = userData.adClickHistory || [];
+        userData.adClickHistory.push({ date: new Date().toISOString() });
+        userData.activityLog.push({
+          type: 'ad_click', 
+          date: new Date().toISOString(), 
+          ip: userIP, 
+          country: userCountry 
+        });
+      }
+
+      // Update UI immediately
+      updateBalanceUI();
+      
+      // Save to server in background
+      saveUserToServer().catch(console.error);
+      
+      showNotification(`You earned ৳${parseFloat(perAdRate).toFixed(2)}! (${durationSeconds}s)` + (adClicked ? ' +1 click' : ''));
+      return true;
+      
+    } else {
+      // Ad not completed or not watched long enough
+      let reason = '';
+      if (!adCompleted) {
+        reason = 'Ad was not completed properly';
+      } else {
+        reason = `Ad watched for only ${durationSeconds}s (minimum ${minAdWatchTime}s required)`;
+      }
+      
+      adStatus().textContent = `⚠️ ${reason}`;
+      adDoneBtn().style.display = 'inline-flex';
+      showNotification(reason + '. No reward given.', false);
+      return false;
+    }
+    
+  } catch (error) {
+    console.error('Ad safety check error:', error);
+    adStatus().textContent = '❌ Error playing ad. Please try again.';
+    adDoneBtn().style.display = 'inline-flex';
+    showNotification('Error playing ad. Please try again.', false);
+    return false;
+  }
+}
+
+// Update ad status indicator
+function updateAdStatusIndicator() {
+  const indicator = adStatusIndicator();
+  const minWatchTime = minWatchTimeEl();
+  
+  if (!adScriptLoaded) {
+    indicator.className = 'ad-status-indicator ad-status-warning';
+    indicator.textContent = '⚠️ Ad system loading...';
+  } else if (adBlockerDetected) {
+    indicator.className = 'ad-status-indicator ad-status-error';
+    indicator.textContent = '🚫 Ad blocker detected! Please disable it.';
+  } else {
+    indicator.className = 'ad-status-indicator ad-status-ready';
+    indicator.textContent = `✅ Ad system ready (min ${minAdWatchTime}s)`;
+  }
+  
+  minWatchTime.textContent = `${minAdWatchTime} seconds`;
+}
+
+// Load ad-related settings from admin
+async function loadAdSettings() {
+  try {
+    const settingsDoc = await db.collection('settings').doc('adSettings').get();
+    if (settingsDoc.exists) {
+      const settings = settingsDoc.data();
+      minAdWatchTime = settings.minAdWatchTime || 6;
+      adLoadTimeout = settings.adLoadTimeout || 8000;
+      
+      // Update perAdRate from main settings too
+      const mainSettings = await db.collection('settings').doc('appSettings').get();
+      if (mainSettings.exists) {
+        perAdRate = parseFloat(mainSettings.data().perAdRate || perAdRate);
+      }
+    }
+  } catch (error) {
+    console.warn('Error loading ad settings:', error);
+  }
+}
+
+/* ========== Daily Reset Logic ========== */
+function checkAndResetDailyCounts() {
+  const today = new Date().toDateString();
+  if (userData.lastAdReset !== today) {
+    console.log('Resetting daily counts for new day');
+    
+    // শুধু ডেইলি কাউন্ট রিসেট করুন, ব্যালেন্স নয়
+    userData.lastAdReset = today;
+    userData.todayAdCount = 0;
+    userData.todayAdClicks = 0;
+    
+    // সার্ভারে সেভ করুন
+    saveUserToServer().catch(e => console.error('Reset save error:', e));
+    return true;
+  }
+  return false;
+}
+
+/* ========== Load user IP & country ========== */
+async function detectLocation(){
+  try {
+    const r = await fetch('https://api.ipify.org?format=json');
+    const j = await r.json();
+    userIP = j.ip || 'Unknown';
+    const r2 = await fetch(`https://ipapi.co/${userIP}/json/`);
+    const j2 = await r2.json();
+    userCountry = j2.country_code || 'Unknown';
+  } catch(e){
+    console.warn('Location detect failed', e);
+    userIP = 'Unknown'; userCountry = 'Unknown';
+  }
+}
+
+/* ========== Real-time User Data Listener ========== */
+function setupUserListener() {
+  if (unsubscribeUser) {
+    unsubscribeUser(); // Unsubscribe from previous listener
+  }
+  
+  unsubscribeUser = db.collection('users').doc(uid).onSnapshot((doc) => {
+    if (doc.exists) {
+      const data = doc.data();
+      
+      // Update user data with real-time values
+      userData.balance = parseFloat(data.balance || 0);
+      userData.totalEarned = parseFloat(data.totalEarned || 0);
+      userData.totalWithdrawn = parseFloat(data.totalWithdrawn || 0);
+      userData.adHistory = data.adHistory || [];
+      userData.adClickHistory = data.adClickHistory || [];
+      userData.activityLog = data.activityLog || [];
+      userData.registrationDate = data.registrationDate || new Date().toISOString();
+      userData.userId = data.userId || uid;
+      userData.isBlocked = data.isBlocked || false;
+      
+      // Referral data
+      userData.referralCode = data.referralCode || userData.referralCode;
+      userData.referredBy = data.referredBy || '';
+      userData.referrals = data.referrals || [];
+      userData.referralEarnings = parseFloat(data.referralEarnings || 0);
+      
+      // New referral bonus data
+      userData.referralBonuses = data.referralBonuses || {};
+      userData.claimedBonuses = data.claimedBonuses || [];
+      
+      // Daily counts
+      userData.todayAdCount = parseInt(data.todayAdCount || 0);
+      userData.todayAdClicks = parseInt(data.todayAdClicks || 0);
+      userData.lastAdReset = data.lastAdReset || new Date().toDateString();
+      
+      // Update UI immediately
+      updateBalanceUI();
+      updateReferralUI();
+      
+      console.log('Real-time update - Balance:', userData.balance);
+    }
+  }, (error) => {
+    console.error('User listener error:', error);
+  });
+}
+
+/* ========== Load & Save from Firestore ========== */
+async function loadUserFromServer(){
+  try {
+    const doc = await db.collection('users').doc(uid).get();
+    if (doc.exists){
+      const data = doc.data();
+      
+      // ব্যালেন্স এবং পার্মানেন্ট ডেটা লোড করুন
+      userData.balance = parseFloat(data.balance || 0);
+      userData.totalEarned = parseFloat(data.totalEarned || 0);
+      userData.totalWithdrawn = parseFloat(data.totalWithdrawn || 0);
+      userData.adHistory = data.adHistory || [];
+      userData.adClickHistory = data.adClickHistory || [];
+      userData.activityLog = data.activityLog || [];
+      userData.registrationDate = data.registrationDate || new Date().toISOString();
+      userData.userId = data.userId || uid;
+      userData.isBlocked = data.isBlocked || false;
+      
+      // Referral data
+      userData.referralCode = data.referralCode || generateReferralCode();
+      userData.referredBy = data.referredBy || '';
+      userData.referrals = data.referrals || [];
+      userData.referralEarnings = parseFloat(data.referralEarnings || 0);
+      
+      // New referral bonus data
+      userData.referralBonuses = data.referralBonuses || {};
+      userData.claimedBonuses = data.claimedBonuses || [];
+      
+      // ডেইলি কাউন্ট লোড করুন কিন্তু রিসেট চেক করুন
+      userData.todayAdCount = parseInt(data.todayAdCount || 0);
+      userData.todayAdClicks = parseInt(data.todayAdClicks || 0);
+      userData.lastAdReset = data.lastAdReset || new Date().toDateString();
+      
+      // ডেইলি রিসেট চেক করুন
+      checkAndResetDailyCounts();
+      
+      console.log('User data loaded - Balance:', userData.balance, 'Today Count:', userData.todayAdCount);
+    } else {
+      // নতুন ইউজার তৈরি করুন
+      const today = new Date().toDateString();
+      userData = {
         balance: 0,
-        todayAds: 0,
-        adClicks: 0,
-        referralCount: 0,
-        referralEarnings: 0,
-        country: 'Unknown',
-        isBlocked: false,
-        withdrawalHistory: [],
+        totalEarned: 0,
+        totalWithdrawn: 0,
         adHistory: [],
         adClickHistory: [],
         activityLog: [],
-        communityStatus: {
-          channelJoined: false,
-          groupJoined: false,
-          channelJoinDate: null,
-          groupJoinDate: null
-        },
-        // Referral system data
-        referralCode: '',
+        todayAdCount: 0,
+        todayAdClicks: 0,
+        lastAdReset: today,
+        registrationDate: new Date().toISOString(),
+        userId: uid,
+        referralCode: generateReferralCode(),
         referredBy: '',
         referrals: [],
+        referralEarnings: 0,
+        isBlocked: false,
         referralBonuses: {},
-        claimedBonuses: [],
-        lastAdReset: new Date().toDateString()
+        claimedBonuses: []
       };
+      await db.collection('users').doc(uid).set(userData);
+      console.log('New user created');
+    }
+    
+    // Setup real-time listener after initial load
+    setupUserListener();
+    
+  } catch (e){
+    console.error('loadUserFromServer error', e);
+    showNotification('Error loading user data', false);
+    // Fallback to cached balance
+    userData.balance = getCachedBalance();
+  }
+}
 
-      // Community URLs
-      const COMMUNITY_URLS = {
-        channel: 'https://t.me/easyearn1001',
-        group: 'https://t.me/easyearn12111'
-      };
+// Check for referral code in URL parameters
+function checkReferralCode() {
+  try {
+    if (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) {
+      const referralCode = tg.initDataUnsafe.start_param;
+      if (referralCode && referralCode !== userData.referralCode) {
+        // This user came through a referral link
+        processReferral(referralCode);
+      }
+    }
+  } catch (e) {
+    console.error('Error checking referral code:', e);
+  }
+}
 
-      // Withdrawal methods and amounts
-      const defaultMethods = [
-        { name: "bKash", icon: "💳", enabled: true },
-        { name: "Nagad", icon: "📱", enabled: true },
-        { name: "Rocket", icon: "🚀", enabled: true },
-        { name: "Banglalink", icon: "📞", enabled: true },
-        { name: "Grameenphone", icon: "📱", enabled: true },
-        { name: "Robi", icon: "📶", enabled: true },
-        { name: "Airtel", icon: "📱", enabled: true }
-      ];
+// Process referral when a new user joins
+async function processReferral(referralCode) {
+  try {
+    // Only process if this user hasn't been referred before
+    if (userData.referredBy) {
+      console.log('User already referred by:', userData.referredBy);
+      return;
+    }
+
+    // Find the referrer by referral code
+    const referrerQuery = await db.collection('users').where('referralCode', '==', referralCode).get();
+    
+    if (!referrerQuery.empty) {
+      const referrerDoc = referrerQuery.docs[0];
+      const referrerData = referrerDoc.data();
+      const referrerId = referrerDoc.id;
       
-      const amounts = [20, 50, 100, 200, 300, 500];
-
-      // Selected withdrawal method and amount
-      let selectedMethod = null;
-      let selectedAmount = null;
-
-      // Fix for Telegram WebView double click issue
-      let adRunning = false;
-
-      // Initialize the app
-      async function initApp() {
-        // Show loading
-        loading.style.display = 'flex';
-        
-        try {
-          // Get or create user
-          await getOrCreateUser();
-          
-          // Load app settings
-          await loadAppSettings();
-          
-          // Check country restrictions
-          await checkCountryRestriction();
-          
-          // Check daily reset
-          checkAndResetDailyCounts();
-          
-          // Update UI with user data
-          updateUI();
-          
-          // Update community UI
-          updateCommunityUI();
-          
-          // Load referral section
-          loadReferralSection();
-          
-          // Render withdrawal methods
-          renderWithdrawalMethods();
-          
-          // Render amount options
-          renderAmountOptions();
-          
-          // Render withdrawal history
-          renderWithdrawalHistory();
-          
-          // Set up reset timer
-          updateResetTimer();
-          setInterval(updateResetTimer, 60000); // Update every minute
-          
-          // Set current date
-          const now = new Date();
-          currentDate.textContent = now.toDateString();
-          
-          // Check for referral code in URL
-          checkReferralCode();
-          
-          // Show app
-          appContainer.style.display = 'block';
-        } catch (error) {
-          console.error("Error initializing app:", error);
-          showNotification("Error loading app. Please try again.", false);
-        } finally {
-          // Hide loading
-          loading.style.display = 'none';
-        }
-      }
-
-      // Get or create user in Firebase
-      async function getOrCreateUser() {
-        // Generate a unique user ID
-        let userId = localStorage.getItem('earnNowUserId');
-        if (!userId) {
-          userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-          localStorage.setItem('earnNowUserId', userId);
-        }
-        
-        // Check if user exists in Firebase
-        const userDoc = await db.collection("users").doc(userId).get();
-        
-        if (userDoc.exists) {
-          // Load existing user data
-          const data = userDoc.data();
-          userData = {
-            id: userId,
-            balance: data.balance || 0,
-            todayAds: data.todayAds || 0,
-            adClicks: data.adClicks || 0,
-            referralCount: data.referralCount || 0,
-            referralEarnings: data.referralEarnings || 0,
-            country: data.country || 'Unknown',
-            isBlocked: data.isBlocked || false,
-            withdrawalHistory: data.withdrawalHistory || [],
-            adHistory: data.adHistory || [],
-            adClickHistory: data.adClickHistory || [],
-            activityLog: data.activityLog || [],
-            username: data.username || 'user_' + userId.substring(0, 6),
-            name: data.name || 'User',
-            registrationDate: data.registrationDate || new Date(),
-            lastLogin: new Date(),
-            communityStatus: data.communityStatus || {
-              channelJoined: false,
-              groupJoined: false,
-              channelJoinDate: null,
-              groupJoinDate: null
-            },
-            // Referral system data
-            referralCode: data.referralCode || generateReferralCode(),
-            referredBy: data.referredBy || '',
-            referrals: data.referrals || [],
-            referralBonuses: data.referralBonuses || {},
-            claimedBonuses: data.claimedBonuses || [],
-            lastAdReset: data.lastAdReset || new Date().toDateString()
-          };
-          
-          // Update last login
-          await db.collection("users").doc(userId).update({
-            lastLogin: new Date()
-          });
-        } else {
-          // Create new user
-          const today = new Date().toDateString();
-          userData = {
-            id: userId,
-            balance: 0,
-            todayAds: 0,
-            adClicks: 0,
-            referralCount: 0,
-            referralEarnings: 0,
-            country: 'Unknown',
-            isBlocked: false,
-            withdrawalHistory: [],
-            adHistory: [],
-            adClickHistory: [],
-            activityLog: [],
-            username: 'user_' + userId.substring(0, 6),
-            name: 'User',
-            registrationDate: new Date(),
-            lastLogin: new Date(),
-            communityStatus: {
-              channelJoined: false,
-              groupJoined: false,
-              channelJoinDate: null,
-              groupJoinDate: null
-            },
-            // Referral system data
-            referralCode: generateReferralCode(),
-            referredBy: '',
-            referrals: [],
-            referralBonuses: {},
-            claimedBonuses: [],
-            lastAdReset: today
-          };
-          
-          // Save new user to Firebase
-          await db.collection("users").doc(userId).set(userData);
-        }
-      }
-
-      // Generate referral code
-      function generateReferralCode() {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        let result = '';
-        for (let i = 0; i < 6; i++) {
-          result += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        return result;
-      }
-
-      // Generate referral link
-      function generateReferralLink() {
-        const botUsername = 'easyearn11_bot'; // Your actual bot username
-        return `https://t.me/${botUsername}?start=${userData.referralCode}`;
-      }
-
-      // Check for referral code in URL parameters
-      function checkReferralCode() {
-        try {
-          const urlParams = new URLSearchParams(window.location.search);
-          const referralCode = urlParams.get('ref');
-          
-          if (referralCode && referralCode !== userData.referralCode) {
-            processReferral(referralCode);
-          }
-        } catch (e) {
-          console.error('Error checking referral code:', e);
-        }
-      }
-
-      // Process referral when a new user joins
-      async function processReferral(referralCode) {
-        try {
-          // Find the referrer by referral code
-          const referrerQuery = await db.collection('users').where('referralCode', '==', referralCode).get();
-          
-          if (!referrerQuery.empty) {
-            const referrerDoc = referrerQuery.docs[0];
-            const referrerData = referrerDoc.data();
-            const referrerId = referrerDoc.id;
-            
-            // Add this user to referrer's referrals if not already added
-            if (!userData.referredBy) {
-              userData.referredBy = referrerId;
-              
-              // Update referrer's data
-              const updatedReferrals = [...(referrerData.referrals || []), userData.id];
-              const updatedBonuses = {...(referrerData.referralBonuses || {})};
-              
-              // Add bonus for this referral
-              updatedBonuses[userData.id] = {
-                joined: new Date().toISOString(),
-                bonus1Given: false, // ৳1 bonus for new referral
-                bonus2Eligible: false, // ৳2 bonus when user reaches 10 TK
-                bonus2Claimed: false
-              };
-              
-              await db.collection('users').doc(referrerId).update({
-                referrals: updatedReferrals,
-                referralBonuses: updatedBonuses
-              });
-              
-              // Give immediate ৳1 bonus to referrer
-              await db.collection('users').doc(referrerId).update({
-                balance: parseFloat(referrerData.balance || 0) + 1,
-                referralEarnings: parseFloat(referrerData.referralEarnings || 0) + 1
-              });
-              
-              // Mark bonus as given
-              updatedBonuses[userData.id].bonus1Given = true;
-              await db.collection('users').doc(referrerId).update({
-                referralBonuses: updatedBonuses
-              });
-              
-              console.log('Referral processed successfully');
-              
-              // Update local user data if current user is the referrer
-              if (userData.id === referrerId) {
-                userData.referrals = updatedReferrals;
-                userData.referralBonuses = updatedBonuses;
-                userData.balance += 1;
-                userData.referralEarnings += 1;
-                loadReferralSection();
-              }
-            }
-          }
-        } catch (e) {
-          console.error('Error processing referral:', e);
-        }
-      }
-
-      // Check and reset daily counts
-      function checkAndResetDailyCounts() {
-        const today = new Date().toDateString();
-        if (userData.lastAdReset !== today) {
-          console.log('Resetting daily counts for new day');
-          
-          // Reset daily counts only, not balance
-          userData.lastAdReset = today;
-          userData.todayAds = 0;
-          userData.adClicks = 0;
-          
-          // Save to server
-          updateUserInFirebase().catch(e => console.error('Reset save error:', e));
-          return true;
-        }
-        return false;
-      }
-
-      // Load app settings from Firebase
-      async function loadAppSettings() {
-        try {
-          // Load general settings
-          const settingsDoc = await db.collection("settings").doc("appSettings").get();
-          if (settingsDoc.exists) {
-            const settings = settingsDoc.data();
-            appSettings.perAdRate = settings.perAdRate || 0.06;
-            appSettings.dailyTaskLimit = settings.dailyTaskLimit || 10;
-          }
-          
-          // Load country restrictions
-          const countryDoc = await db.collection("settings").doc("countryRestrictions").get();
-          if (countryDoc.exists) {
-            const countrySettings = countryDoc.data();
-            appSettings.allowedCountries = countrySettings.allowedCountries || [];
-            appSettings.restrictionEnabled = countrySettings.restrictionEnabled || false;
-          }
-          
-          // Load withdrawal methods
-          const methodsDoc = await db.collection("settings").doc("withdrawalMethods").get();
-          if (methodsDoc.exists) {
-            const methodsData = methodsDoc.data();
-            appSettings.withdrawalMethods = methodsData.methods || defaultMethods;
-          } else {
-            appSettings.withdrawalMethods = defaultMethods;
-          }
-          
-          // Update UI with settings
-          perAdRate.textContent = appSettings.perAdRate.toFixed(2);
-          dailyTaskLimit.textContent = appSettings.dailyTaskLimit;
-        } catch (error) {
-          console.error("Error loading app settings:", error);
-        }
-      }
-
-      // Check if user's country is restricted
-      async function checkCountryRestriction() {
-        // In a real app, you would detect the user's country from IP or other methods
-        // For this demo, we'll use a random country or allow all if no restrictions
-        const userCountry = userData.country;
-        
-        if (appSettings.restrictionEnabled && appSettings.allowedCountries.length > 0) {
-          if (!appSettings.allowedCountries.includes(userCountry) && userCountry !== 'Unknown') {
-            // User's country is restricted
-            countryRestrictionWarning.style.display = 'block';
-            appContainer.style.display = 'none';
-            return false;
-          }
-        }
-        
-        return true;
-      }
-
-      // Update UI with current user data
-      function updateUI() {
-        balanceAmount.textContent = `৳${userData.balance.toFixed(2)}`;
-        todayAds.textContent = `${userData.todayAds}/${appSettings.dailyTaskLimit}`;
-        adClicks.textContent = userData.adClicks;
-        
-        // Enable/disable watch ad button based on daily limit and blocking
-        watchBtn.disabled = userData.todayAds >= appSettings.dailyTaskLimit || userData.isBlocked;
-        
-        // Update ad reward display
-        adReward.textContent = `Earning: ৳${appSettings.perAdRate.toFixed(2)}`;
-      }
-
-      // Update community UI based on join status
-      function updateCommunityUI() {
-        if (userData.communityStatus.channelJoined) {
-          channelIcon.style.display = 'none';
-          channelText.textContent = 'Joined Our Channel';
-          channelCheck.style.display = 'inline';
-          joinChannelBtn.style.background = 'linear-gradient(90deg, #28a745, #20c997)';
-          joinChannelBtn.disabled = false;
-        }
-        
-        if (userData.communityStatus.groupJoined) {
-          groupIcon.style.display = 'none';
-          groupText.textContent = 'Joined Support Group';
-          groupCheck.style.display = 'inline';
-          joinGroupBtn.style.background = 'linear-gradient(90deg, #ffc107, #fd7e14)';
-          joinGroupBtn.disabled = false;
-        }
-      }
-
-      // Load referral section
-      async function loadReferralSection(){
-        try {
-          document.getElementById("referralCode").textContent = userData.referralCode || "N/A";
-          document.getElementById("refCount").textContent = (userData.referrals?.length || 0);
-          document.getElementById("refEarned").textContent = (userData.referralEarnings || 0).toFixed(2);
-          const claimable = calcClaimable(userData);
-          document.getElementById("claimable").textContent = claimable;
-        } catch(e){ console.error(e); }
-      }
-
-      // Calculate claimable bonus
-      function calcClaimable(user){
-        let total = 0;
-        const bonuses = user.referralBonuses || {};
-        for(const id in bonuses){
-          const b = bonuses[id];
-          if(b.bonus2Eligible && !b.bonus2Claimed) total += 2;
-        }
-        return total;
-      }
-
-      // Claim bonus function
-      async function claimBonusFunc(){
-        const claimable = calcClaimable(userData);
-        if (claimable <= 0) {
-          showNotification("No bonus available to claim", false);
-          return;
-        }
-
-        userData.referralEarnings = (userData.referralEarnings || 0) + claimable;
-        userData.balance = (userData.balance || 0) + claimable;
-
-        const bonuses = userData.referralBonuses || {};
-        for (const id in bonuses){
-          if(bonuses[id].bonus2Eligible && !bonuses[id].bonus2Claimed)
-            bonuses[id].bonus2Claimed = true;
-        }
-
-        await db.collection("users").doc(userData.id).update({
-          referralEarnings: userData.referralEarnings,
-          balance: userData.balance,
-          referralBonuses: bonuses
-        });
-
-        showNotification("Bonus claimed successfully!");
-        loadReferralSection();
-        updateUI();
-      }
-
-      // Copy code function
-      function copyCodeFunc(){
-        const code = document.getElementById("referralCode").textContent;
-        navigator.clipboard.writeText(code).then(()=> showNotification("Referral code copied!"));
-      }
-
-      // Share link function
-      function shareLinkFunc(){
-        const code = document.getElementById("referralCode").textContent;
-        const botUser = "easyearn11_bot";
-        const link = `https://t.me/${botUser}?start=${code}`;
-        const text = `Join EasyEarn! Use my referral code ${code} to earn instantly.\n${link}`;
-        
-        if (navigator.share) {
-          navigator.share({
-            title: 'Earn Now',
-            text: text,
-            url: link
-          })
-          .then(() => console.log('Successful share'))
-          .catch(error => console.log('Error sharing:', error));
-        } else {
-          navigator.clipboard.writeText(text)
-            .then(() => {
-              showNotification("Referral link copied to clipboard!");
-            })
-            .catch(err => {
-              console.error('Failed to copy: ', err);
-              showNotification("Failed to copy link", false);
-            });
-        }
-      }
-
-      // Save community status to user data
-      async function saveCommunityStatus() {
-        await updateUserInFirebase();
-      }
-
-      // Open community channel
-      function openCommunityChannel() {
-        // Mark as joined immediately for better UX
-        if (!userData.communityStatus.channelJoined) {
-          userData.communityStatus.channelJoined = true;
-          userData.communityStatus.channelJoinDate = new Date().toISOString();
-          updateCommunityUI();
-          saveCommunityStatus().catch(console.error);
-          
-          // Add to activity log
-          userData.activityLog.push({
-            type: 'community_join',
-            community: 'channel',
-            date: new Date().toISOString()
-          });
-          
-          showNotification('✅ Channel joined successfully!');
-        }
-        
-        // Open the channel
-        window.open(COMMUNITY_URLS.channel, '_blank');
-      }
-
-      // Open support group
-      function openSupportGroup() {
-        // Mark as joined immediately for better UX
-        if (!userData.communityStatus.groupJoined) {
-          userData.communityStatus.groupJoined = true;
-          userData.communityStatus.groupJoinDate = new Date().toISOString();
-          updateCommunityUI();
-          saveCommunityStatus().catch(console.error);
-          
-          // Add to activity log
-          userData.activityLog.push({
-            type: 'community_join',
-            community: 'group',
-            date: new Date().toISOString()
-          });
-          
-          showNotification('✅ Group joined successfully!');
-        }
-        
-        // Open the group
-        window.open(COMMUNITY_URLS.group, '_blank');
-      }
-
-      // Render withdrawal methods
-      function renderWithdrawalMethods() {
-        withdrawalMethods.innerHTML = '';
-        
-        const enabledMethods = appSettings.withdrawalMethods.filter(method => method.enabled);
-        
-        if (enabledMethods.length === 0) {
-          withdrawalMethods.innerHTML = `
-            <div style="grid-column: 1 / -1; text-align: center; padding: 10px; color: var(--text-light);">
-              No withdrawal methods available
-            </div>
-          `;
-          return;
-        }
-        
-        enabledMethods.forEach(method => {
-          const methodElement = document.createElement('div');
-          methodElement.className = 'method-item';
-          methodElement.innerHTML = `
-            <div class="method-icon">${method.icon || '💳'}</div>
-            <div class="method-name">${method.name}</div>
-          `;
-          methodElement.addEventListener('click', () => selectMethod(method.name, methodElement));
-          withdrawalMethods.appendChild(methodElement);
-        });
-      }
-
-      // Select withdrawal method
-      function selectMethod(methodName, element) {
-        // Remove selected class from all methods
-        document.querySelectorAll('.method-item').forEach(item => {
-          item.classList.remove('selected');
-        });
-        
-        // Add selected class to clicked method
-        element.classList.add('selected');
-        selectedMethod = methodName;
-      }
-
-      // Render amount options
-      function renderAmountOptions() {
-        amountOptions.innerHTML = '';
-        amounts.forEach(amount => {
-          const amountElement = document.createElement('div');
-          amountElement.className = 'amount-option';
-          amountElement.textContent = `৳${amount}`;
-          amountElement.addEventListener('click', () => selectAmount(amount, amountElement));
-          amountOptions.appendChild(amountElement);
-        });
-      }
-
-      // Select amount
-      function selectAmount(amount, element) {
-        // Remove selected class from all amounts
-        document.querySelectorAll('.amount-option').forEach(item => {
-          item.classList.remove('selected');
-        });
-        
-        // Add selected class to clicked amount
-        element.classList.add('selected');
-        selectedAmount = amount;
-        customAmount.value = '';
-      }
-
-      // Render withdrawal history
-      function renderWithdrawalHistory() {
-        if (userData.withdrawalHistory.length === 0) {
-          withdrawalHistory.innerHTML = `
-            <div style="text-align: center; padding: 20px; color: var(--text-light);">
-              No withdrawal history
-            </div>
-          `;
-          return;
-        }
-
-        withdrawalHistory.innerHTML = '';
-        userData.withdrawalHistory.forEach(history => {
-          const historyElement = document.createElement('div');
-          historyElement.className = 'history-item';
-          
-          let statusClass = 'status-pending';
-          if (history.status === 'paid') statusClass = 'status-paid';
-          if (history.status === 'rejected') statusClass = 'status-rejected';
-          
-          historyElement.innerHTML = `
-            <div class="history-details">
-              <div class="history-method">${history.method}</div>
-              <div class="history-date">${history.date}</div>
-            </div>
-            <div style="display: flex; align-items: center;">
-              <div class="history-amount">৳${history.amount}</div>
-              <div class="history-status ${statusClass}">${history.status}</div>
-            </div>
-          `;
-          withdrawalHistory.appendChild(historyElement);
-        });
-      }
-
-      // Update reset timer
-      function updateResetTimer() {
-        const now = new Date();
-        const tomorrow = new Date(now);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        tomorrow.setHours(0, 0, 0, 0);
-        
-        const diff = tomorrow - now;
-        const hours = Math.floor(diff / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        
-        resetTime.textContent = `${hours}h ${minutes}m`;
-      }
-
-      // Show notification
-      function showNotification(message, isSuccess = true) {
-        notification.textContent = message;
-        notification.style.background = isSuccess ? '#4caf50' : '#f44336';
-        notification.style.display = 'block';
-        
-        setTimeout(() => {
-          notification.style.display = 'none';
-        }, 3000);
-      }
-
-      // Show ad system message
-      function showAdSystemMessage(message, type = 'info') {
-        adSystemMessage.textContent = message;
-        adSystemMessage.className = `ad-system-message ${type}`;
-        adSystemMessage.style.display = 'block';
-        
-        // Auto hide after 5 seconds
-        setTimeout(() => {
-          adSystemMessage.style.display = 'none';
-        }, 5000);
-      }
-
-      // ✅ Wait until AuruAds function ready
-      async function waitForAuruAds(maxWait = 8000) {
-        const interval = 200;
-        let waited = 0;
-        while (waited < maxWait) {
-          if (typeof window.showAuruads === "function") return true; // ad ready
-          await new Promise(res => setTimeout(res, interval));
-          waited += interval;
-        }
-        return false; // ad not ready → likely blocked
-      }
-
-      // 🪙 Add reward safely
-      function addPoint() {
-        userData.balance += appSettings.perAdRate;
-        userData.todayAds++;
-        
-        // Add to ad history
-        userData.adHistory.push({
-          date: new Date(),
-          reward: appSettings.perAdRate,
-          source: 'auruads'
-        });
-        
-        // Add to activity log
-        userData.activityLog.push({
-          date: new Date(),
-          type: 'ad_watch',
-          reward: appSettings.perAdRate
-        });
-        
-        // Update user in Firebase
-        updateUserInFirebase();
-        
-        // Update UI
-        updateUI();
-      }
-
-      // 🎯 Fixed watch & earn function for Telegram WebView
-      watchBtn.addEventListener("click", handleWatchClick, { passive: false });
-
-      async function handleWatchClick(e) {
-        e.preventDefault(); // Prevent Telegram double tap trigger
-        if (adRunning) return;
-        adRunning = true;
-
-        try {
-          checkAndResetDailyCounts();
-
-          if (userData.todayAds >= appSettings.dailyTaskLimit) {
-            showAdSystemMessage("Daily ad limit reached. Try again tomorrow.", "warning");
-            return;
-          }
-
-          if (userData.isBlocked) {
-            showAdSystemMessage("Your account has been blocked. Contact support.", "error");
-            return;
-          }
-
-          adContainer.style.display = "flex";
-          adReward.textContent = `Loading ad...`;
-          adClose.style.display = "none";
-          watchBtn.disabled = true;
-
-          showAdSystemMessage("⏳ বিজ্ঞাপন লোড হচ্ছে...", "info");
-          const ready = await waitForAuruAds();
-          if (!ready) {
-            showAdSystemMessage("🚫 Ad Blocker চালু আছে বা বিজ্ঞাপন লোড হয়নি।", "error");
-            adContainer.style.display = "none";
-            watchBtn.disabled = false;
-            return;
-          }
-
-          const start = Date.now();
-          let adShown = false;
-
-          try {
-            await window.showAuruads().then(() => { adShown = true; });
-          } catch (e) {
-            adShown = false;
-            console.warn("AuruAds error:", e);
-          }
-
-          const duration = Date.now() - start;
-
-          if (adShown && duration >= 6000) {
-            addPoint();
-            showAdSystemMessage(`✅ আপনি ৳${appSettings.perAdRate.toFixed(2)} পয়েন্ট পেয়েছেন!`, "success");
-            adReward.textContent = `Ad completed! Earned: ৳${appSettings.perAdRate.toFixed(2)}`;
-            adReward.style.color = "#4caf50";
-          } else if (adShown && duration < 6000) {
-            showAdSystemMessage("⚠️ Ad সম্পূর্ণ দেখা হয়নি, point দেওয়া হয়নি।", "warning");
-            adReward.textContent = "Ad not completed";
-            adReward.style.color = "#ff9800";
-          } else {
-            showAdSystemMessage("❌ Ad load ব্যর্থ হয়েছে। আবার চেষ্টা করুন।", "error");
-            adReward.textContent = "Ad failed to load";
-            adReward.style.color = "#f44336";
-          }
-
-          adClose.style.display = "block";
-          watchBtn.disabled = false;
-        } finally {
-          setTimeout(() => { adRunning = false; }, 1500);
-        }
-      }
-
-      // Close ad container
-      adClose.addEventListener('click', function() {
-        adContainer.style.display = 'none';
-        adClose.style.display = 'none';
+      // Set this user as referred by
+      userData.referredBy = referrerId;
+      await db.collection('users').doc(uid).update({
+        referredBy: referrerId
       });
 
-      // Update user data in Firebase
-      async function updateUserInFirebase() {
-        try {
-          await db.collection("users").doc(userData.id).update({
-            balance: userData.balance,
-            todayAds: userData.todayAds,
-            adClicks: userData.adClicks,
-            referralCount: userData.referralCount,
-            referralEarnings: userData.referralEarnings,
-            withdrawalHistory: userData.withdrawalHistory,
-            adHistory: userData.adHistory,
-            adClickHistory: userData.adClickHistory,
-            activityLog: userData.activityLog,
-            communityStatus: userData.communityStatus,
-            referralCode: userData.referralCode,
-            referredBy: userData.referredBy,
-            referrals: userData.referrals,
-            referralBonuses: userData.referralBonuses,
-            claimedBonuses: userData.claimedBonuses,
-            lastAdReset: userData.lastAdReset,
-            lastLogin: new Date()
-          });
-        } catch (error) {
-          console.error("Error updating user in Firebase:", error);
+      // Update referrer's data
+      const updatedReferrals = [...(referrerData.referrals || []), uid];
+      const updatedBonuses = {...(referrerData.referralBonuses || {})};
+      
+      // Add bonus for this referral
+      updatedBonuses[uid] = {
+        joined: new Date().toISOString(),
+        bonus1Given: false, // ৳1 bonus for new referral
+        bonus2Eligible: false, // ৳2 bonus when user reaches 10 TK
+        bonus2Claimed: false
+      };
+      
+      await db.collection('users').doc(referrerId).update({
+        referrals: updatedReferrals,
+        referralBonuses: updatedBonuses
+      });
+      
+      // Give immediate ৳1 bonus to referrer
+      await db.collection('users').doc(referrerId).update({
+        balance: parseFloat(referrerData.balance || 0) + 1,
+        referralEarnings: parseFloat(referrerData.referralEarnings || 0) + 1
+      });
+      
+      // Mark bonus as given
+      updatedBonuses[uid].bonus1Given = true;
+      await db.collection('users').doc(referrerId).update({
+        referralBonuses: updatedBonuses
+      });
+      
+      console.log('Referral processed successfully');
+      showNotification('Welcome! You joined via referral link.');
+      
+    }
+  } catch (e) {
+    console.error('Error processing referral:', e);
+  }
+}
+
+// Check and update referral bonuses based on referred users' balances
+async function updateReferralBonuses() {
+  try {
+    if (!userData.referrals || userData.referrals.length === 0) return;
+    
+    let updated = false;
+    const updatedBonuses = {...userData.referralBonuses};
+    
+    for (const referredUserId of userData.referrals) {
+      if (updatedBonuses[referredUserId] && 
+          !updatedBonuses[referredUserId].bonus2Eligible && 
+          !updatedBonuses[referredUserId].bonus2Claimed) {
+        
+        // Check referred user's balance
+        const referredUserDoc = await db.collection('users').doc(referredUserId).get();
+        if (referredUserDoc.exists) {
+          const referredUserData = referredUserDoc.data();
+          const referredBalance = parseFloat(referredUserData.balance || 0);
+          
+          if (referredBalance >= 10) {
+            updatedBonuses[referredUserId].bonus2Eligible = true;
+            updated = true;
+          }
         }
       }
-
-      // Custom amount input
-      customAmount.addEventListener('input', function() {
-        if (this.value) {
-          // Remove selected class from all amounts
-          document.querySelectorAll('.amount-option').forEach(item => {
-            item.classList.remove('selected');
-          });
-          
-          selectedAmount = parseFloat(this.value);
-        }
+    }
+    
+    if (updated) {
+      userData.referralBonuses = updatedBonuses;
+      await db.collection('users').doc(uid).update({
+        referralBonuses: updatedBonuses
       });
+    }
+  } catch (e) {
+    console.error('Error updating referral bonuses:', e);
+  }
+}
 
-      // Submit withdrawal request
-      submitWithdrawalBtn.addEventListener('click', async function() {
-        if (!selectedMethod) {
-          showNotification("Please select a withdrawal method", false);
-          return;
-        }
-        
-        if (!selectedAmount) {
-          showNotification("Please select an amount", false);
-          return;
-        }
-        
-        if (!accountNumber.value.trim()) {
-          showNotification("Please enter your account number", false);
-          return;
-        }
-        
-        if (selectedAmount < 20 || selectedAmount > 500) {
-          showNotification("Amount must be between ৳20 and ৳500", false);
-          return;
-        }
-        
-        if (userData.balance < selectedAmount) {
-          showNotification("Insufficient balance", false);
-          return;
-        }
-        
-        // Create withdrawal request
-        const withdrawalRequest = {
-          method: selectedMethod,
-          amount: selectedAmount,
-          accountNumber: accountNumber.value,
-          date: new Date().toLocaleDateString(),
-          status: 'pending',
-          userId: userData.id,
-          userName: userData.name,
-          userUsername: userData.username
-        };
-        
-        // Add to user's history
-        userData.withdrawalHistory.unshift(withdrawalRequest);
-        
-        // Deduct from balance
-        userData.balance -= selectedAmount;
-        
-        // Save to Firebase
-        await updateUserInFirebase();
-        
-        // Also save to withdrawalRequests collection for admin panel
-        try {
-          await db.collection("withdrawalRequests").add(withdrawalRequest);
-        } catch (error) {
-          console.error("Error saving withdrawal request:", error);
-        }
-        
-        // Update UI
-        updateUI();
-        renderWithdrawalHistory();
-        
-        // Reset form
-        selectedMethod = null;
-        selectedAmount = null;
-        accountNumber.value = '';
-        customAmount.value = '';
-        document.querySelectorAll('.method-item, .amount-option').forEach(item => {
-          item.classList.remove('selected');
-        });
-        
-        showNotification("Withdrawal request submitted successfully!");
-      });
+// Calculate claimable bonus amount
+function calculateClaimableBonus() {
+  let totalClaimable = 0;
+  
+  if (userData.referralBonuses) {
+    for (const referredUserId in userData.referralBonuses) {
+      const bonus = userData.referralBonuses[referredUserId];
+      if (bonus && bonus.bonus2Eligible && !bonus.bonus2Claimed) {
+        totalClaimable += 2; // ৳2 per eligible referral
+      }
+    }
+  }
+  
+  return totalClaimable;
+}
 
-      // Community section event listeners
-      joinChannelBtn.addEventListener('click', openCommunityChannel);
-      joinGroupBtn.addEventListener('click', openSupportGroup);
-
-      // Referral section event listeners
-      copyCodeBtn.addEventListener('click', copyCodeFunc);
-      shareLinkBtn.addEventListener('click', shareLinkFunc);
-      claimBonusBtn.addEventListener('click', claimBonusFunc);
-
-      // Initialize the app
-      initApp();
+// Claim referral bonuses
+async function claimReferralBonuses() {
+  const claimableAmount = calculateClaimableBonus();
+  
+  if (claimableAmount <= 0) {
+    showNotification('No bonuses available to claim', false);
+    return;
+  }
+  
+  try {
+    const updatedBonuses = {...userData.referralBonuses};
+    let claimedCount = 0;
+    
+    for (const referredUserId in userData.referralBonuses) {
+      const bonus = updatedBonuses[referredUserId];
+      if (bonus && bonus.bonus2Eligible && !bonus.bonus2Claimed) {
+        updatedBonuses[referredUserId].bonus2Claimed = true;
+        claimedCount++;
+      }
+    }
+    
+    // Update user balance and bonuses
+    await db.collection('users').doc(uid).update({
+      balance: userData.balance + claimableAmount,
+      referralEarnings: userData.referralEarnings + claimableAmount,
+      referralBonuses: updatedBonuses,
+      claimedBonuses: [...(userData.claimedBonuses || []), {
+        date: new Date().toISOString(),
+        amount: claimableAmount,
+        referrals: claimedCount
+      }]
     });
-  </script>
+    
+    showNotification(`Successfully claimed ৳${claimableAmount} referral bonus!`);
+    
+  } catch (e) {
+    console.error('Error claiming referral bonuses:', e);
+    showNotification('Error claiming bonuses', false);
+  }
+}
+
+async function loadWithdrawalRequests(){
+  try {
+    const snap = await db.collection('withdrawalRequests')
+      .where('userId', '==', uid)
+      .orderBy('date', 'desc')
+      .get();
+    
+    allRequests = snap.docs.map(d => ({ 
+      id: d.id, 
+      ...d.data(),
+      date: d.data().date || new Date().toISOString()
+    }));
+  } catch(e){
+    console.error('loadWithdrawalRequests error', e);
+    // Fallback: try without ordering
+    try {
+      const snap = await db.collection('withdrawalRequests')
+        .where('userId', '==', uid)
+        .get();
+      allRequests = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch(err) {
+      console.error('Fallback load error:', err);
+      allRequests = [];
+    }
+  }
+}
+
+async function loadSettings(){
+  try {
+    const s = await db.collection('settings').doc('appSettings').get();
+    if (s.exists){
+      const v = s.data();
+      perAdRate = parseFloat(v.perAdRate || perAdRate);
+      dailyLimit = parseInt(v.dailyTaskLimit || dailyLimit);
+    }
+    const methodsDoc = await db.collection('settings').doc('withdrawalMethods').get();
+    if (methodsDoc.exists){
+      const vm = methodsDoc.data();
+      withdrawalMethods = vm.methods || [];
+    } else {
+      withdrawalMethods = [
+        { name: 'bKash', enabled: true },
+        { name: 'Nagad', enabled: true },
+        { name: 'Rocket', enabled: true },
+        { name: 'Banglalink', enabled: true },
+        { name: 'Grameenphone', enabled: true },
+        { name: 'Robi', enabled: true },
+        { name: 'Airtel', enabled: true }
+      ];
+    }
+  } catch(e){
+    console.warn('loadSettings error', e);
+  }
+}
+
+async function saveUserToServer(){
+  try {
+    await db.collection('users').doc(uid).set({
+      ...userData,
+      lastUpdate: new Date().toISOString()
+    }, { merge: true });
+    console.log('User data saved - Balance:', userData.balance, 'Today Count:', userData.todayAdCount);
+  } catch(e){
+    console.error('saveUserToServer error', e);
+    showNotification('Error saving data', false);
+  }
+}
+
+/* ========== UI render functions ========== */
+function updateBalanceUI() {
+  // Check if user is blocked
+  if (userData.isBlocked) {
+    watchAdBtn().disabled = true;
+    toggleWithdrawBtn().disabled = true;
+    showNotification('Your account has been blocked. Contact support.', false);
+    return;
+  }
+  
+  // ডেইলি রিসেট চেক করুন
+  checkAndResetDailyCounts();
+  
+  const balance = parseFloat(userData.balance || getCachedBalance());
+  balanceEl().textContent = balance.toFixed(2);
+  setCachedBalance(balance);
+  
+  perAdEl().textContent = perAdRate.toFixed(2);
+  todayCountEl().textContent = userData.todayAdCount || 0;
+  todayClicksEl().textContent = userData.todayAdClicks || 0;
+  dailyLimitEl().textContent = dailyLimit;
+  
+  const pct = ((userData.todayAdCount || 0) / dailyLimit) * 100;
+  taskBarEl().style.width = `${Math.min(pct,100)}%`;
+  updateResetTimeUI();
+}
+
+function updateReferralUI() {
+  referralCodeEl().textContent = userData.referralCode || 'N/A';
+  refCountEl().textContent = userData.referrals ? userData.referrals.length : 0;
+  refEarningsEl().textContent = userData.referralEarnings ? userData.referralEarnings.toFixed(2) : '0.00';
+  
+  // Calculate and display pending bonuses
+  const claimableAmount = calculateClaimableBonus();
+  pendingBonusEl().textContent = claimableAmount;
+  claimableAmountEl().textContent = claimableAmount;
+  
+  // Enable/disable claim button
+  if (claimableAmount > 0) {
+    claimRefBonusBtn().disabled = false;
+    claimRefBonusBtn().style.opacity = '1';
+  } else {
+    claimRefBonusBtn().disabled = true;
+    claimRefBonusBtn().style.opacity = '0.7';
+  }
+}
+
+function renderUI(){
+  updateBalanceUI();
+  renderMethods();
+  renderHistory();
+  updateReferralUI();
+}
+
+function renderMethods(){
+  const container = methodCardsEl();
+  container.innerHTML = '';
+  const enabled = (withdrawalMethods || []).filter(m=>m.enabled);
+  if (enabled.length === 0){
+    container.innerHTML = '<div class="small">No methods available</div>';
+    return;
+  }
+  enabled.forEach(m=>{
+    const div = document.createElement('div');
+    div.className = 'method-card';
+    div.dataset.method = m.name.toLowerCase();
+    
+    const logos = {
+      'bkash': '🏦',
+      'nagad': '📱', 
+      'rocket': '🚀',
+      'banglalink': '📶',
+      'grameenphone': '📞',
+      'robi': '🔴',
+      'airtel': '🅰️'
+    };
+    
+    const logo = logos[m.name.toLowerCase()] || '💳';
+    
+    div.innerHTML = `
+      <div style="font-size:24px;margin-bottom:5px">${logo}</div>
+      <div style="font-weight:800">${m.name}</div>
+      <div class="small">Tap to select</div>
+    `;
+    div.addEventListener('click', ()=> {
+      document.querySelectorAll('.method-card').forEach(c=>c.classList.remove('selected'));
+      div.classList.add('selected');
+    });
+    container.appendChild(div);
+  });
+}
+
+function renderHistory(){
+  const container = historyListEl();
+  container.innerHTML = '';
+  const myReqs = (allRequests || []).filter(r => String(r.userId) === String(uid) || String(r.userId) === String(userData.userId));
+  if (myReqs.length === 0){
+    container.innerHTML = '<div class="small" style="padding:12px;text-align:center;color:#666">No withdrawal history</div>';
+    return;
+  }
+  myReqs.forEach(r=>{
+    const div = document.createElement('div');
+    div.className = 'history-item';
+    const left = document.createElement('div');
+    
+    let formattedDate = 'Unknown';
+    if (r.date) {
+      const dateObj = typeof r.date.toDate === 'function' ? r.date.toDate() : new Date(r.date);
+      if (!isNaN(dateObj.getTime())) {
+        const day = dateObj.getDate();
+        const month = dateObj.getMonth() + 1;
+        const year = dateObj.getFullYear();
+        formattedDate = `${day}-${month}-${year}`;
+      }
+    }
+    
+    left.innerHTML = `<div style="font-weight:800">${(r.method||'--').toString()}</div><div class="small">${formattedDate}</div>`;
+    const right = document.createElement('div');
+    const statusClass = r.status === 'paid' ? 'status-paid' : (r.status === 'rejected' ? 'status-rejected' : 'status-pending');
+    right.innerHTML = `<div style="text-align:right">৳${(r.amount||0)}<div style="margin-top:6px"><span class="status-badge ${statusClass}">${r.status || 'pending'}</span></div></div>`;
+    div.appendChild(left); div.appendChild(right);
+    container.appendChild(div);
+  });
+}
+
+/* ========== Community and Referral Functions ========== */
+function openCommunityChannel() {
+  window.open('https://t.me/easyearn1211', '_blank');
+}
+
+function openSupportGroup() {
+  window.open('https://t.me/+kx6C43GeG4ljY2Jl', '_blank');
+}
+
+function copyReferralCode() {
+  const code = userData.referralCode;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(code).then(() => {
+      showNotification('Referral code copied to clipboard!');
+    }).catch(err => {
+      fallbackCopyText(code);
+    });
+  } else {
+    fallbackCopyText(code);
+  }
+}
+
+function shareReferralLink() {
+  shareModal().style.display = 'flex';
+}
+
+function fallbackCopyText(text) {
+  const textArea = document.createElement("textarea");
+  textArea.value = text;
+  document.body.appendChild(textArea);
+  textArea.focus();
+  textArea.select();
+  try {
+    document.execCommand('copy');
+    showNotification('Copied to clipboard!');
+  } catch (err) {
+    console.error('Fallback: Unable to copy', err);
+    showNotification('Failed to copy. Please copy manually.', false);
+  }
+  document.body.removeChild(textArea);
+}
+
+/* ========== Share Functions ========== */
+function shareToTelegram() {
+  const text = generateShareText();
+  const url = `https://t.me/share/url?url=${encodeURIComponent(generateReferralLink())}&text=${encodeURIComponent(text)}`;
+  window.open(url, '_blank');
+  shareModal().style.display = 'none';
+  showNotification('Telegram share opened!');
+}
+
+function shareToFacebook() {
+  const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(generateReferralLink())}&quote=${encodeURIComponent('Join EasyEarn and start earning money by watching ads!')}`;
+  window.open(url, '_blank');
+  shareModal().style.display = 'none';
+  showNotification('Facebook share opened!');
+}
+
+function shareToWhatsApp() {
+  const text = generateShareText();
+  const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+  window.open(url, '_blank');
+  shareModal().style.display = 'none';
+  showNotification('WhatsApp share opened!');
+}
+
+function shareToTwitter() {
+  const text = 'Join EasyEarn and start earning money by watching ads!';
+  const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(generateReferralLink())}`;
+  window.open(url, '_blank');
+  shareModal().style.display = 'none';
+  showNotification('Twitter share opened!');
+}
+
+function copyReferralLink() {
+  const link = generateReferralLink();
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(link).then(() => {
+      showNotification('Referral link copied to clipboard!');
+    }).catch(err => {
+      fallbackCopyText(link);
+    });
+  } else {
+    fallbackCopyText(link);
+  }
+  shareModal().style.display = 'none';
+}
+
+/* ========== Withdraw flow ========== */
+async function submitWithdrawRequest(){
+  const selected = document.querySelector('.method-card.selected');
+  if (!selected) return showNotification('Please select a withdrawal method', false);
+  const method = selected.dataset.method;
+  const number = accountNumberInput().value.trim();
+  let amount = parseFloat(withdrawAmountInput().value);
+  
+  // Validation improvements
+  if (!number) return showNotification('Please enter account number', false);
+  if (number.length < 11) return showNotification('Please enter valid account number (11 digits)', false);
+  if (isNaN(amount) || amount <= 0) return showNotification('Please enter valid amount', false);
+  if (amount < 20 || amount > 500) return showNotification('Amount must be between 20 and 500', false);
+  if (userData.balance < amount) return showNotification('Insufficient balance', false);
+
+  const userRef = db.collection('users').doc(uid);
+  const reqsRef = db.collection('withdrawalRequests');
+
+  try {
+    // Show loading
+    submitWithdrawBtn().disabled = true;
+    submitWithdrawBtn().textContent = 'Submitting...';
+
+    // Use transaction for data consistency
+    await db.runTransaction(async (tx) => {
+      const userSnap = await tx.get(userRef);
+      if (!userSnap.exists) throw new Error('User not found');
+      
+      const serverUser = userSnap.data();
+      const serverBalance = parseFloat(serverUser.balance || 0);
+      
+      if (serverBalance < amount) throw new Error('INSUFFICIENT_BALANCE');
+
+      // Update user balance
+      tx.update(userRef, {
+        balance: serverBalance - amount,
+        totalWithdrawn: parseFloat(serverUser.totalWithdrawn || 0) + amount,
+        lastUpdate: new Date().toISOString()
+      });
+
+      // Create withdrawal request
+      const newReqRef = reqsRef.doc();
+      tx.set(newReqRef, {
+        userId: uid,
+        method: method,
+        number: number,
+        amount: amount,
+        status: 'pending',
+        date: new Date().toISOString(), // Use client timestamp
+        ip: userIP,
+        country: userCountry,
+        userName: userData.name || 'Unknown',
+        userUsername: userData.username || 'Unknown'
+      });
+    });
+
+    // Update local data
+    userData.balance = parseFloat(userData.balance || 0) - amount;
+    userData.totalWithdrawn = parseFloat(userData.totalWithdrawn || 0) + amount;
+    
+    // Add to activity log
+    userData.activityLog = userData.activityLog || [];
+    userData.activityLog.push({
+      type: 'withdrawal',
+      date: new Date().toISOString(),
+      amount: amount,
+      method: method,
+      number: number,
+      status: 'pending',
+      ip: userIP,
+      country: userCountry
+    });
+
+    // Reload and update UI
+    await loadWithdrawalRequests();
+    renderUI();
+
+    // Reset form
+    document.querySelectorAll('.method-card').forEach(c=>c.classList.remove('selected'));
+    document.querySelectorAll('.amount-btn').forEach(b=>b.classList.remove('selected'));
+    accountNumberInput().value = '';
+    withdrawAmountInput().value = '';
+    withdrawFormEl().style.display = 'none';
+
+    showNotification('Withdrawal request submitted successfully!');
+    
+    // Save user data (without balance update as it's already done in transaction)
+    await saveUserToServer();
+
+  } catch (err){
+    console.error('Withdraw transaction error', err);
+    
+    if (err && err.message === 'INSUFFICIENT_BALANCE') {
+      showNotification('Insufficient balance', false);
+    } else if (err && err.message.includes('permission')) {
+      showNotification('Database permission error. Please contact support.', false);
+    } else if (err && err.message.includes('offline')) {
+      showNotification('Network error. Please check your connection.', false);
+    } else {
+      showNotification('Could not submit withdrawal. Please try again.', false);
+    }
+  } finally {
+    // Reset button state
+    submitWithdrawBtn().disabled = false;
+    submitWithdrawBtn().textContent = '✅ Submit Request';
+  }
+}
+
+/* ========== Watch ad flow - Enhanced with safety checks ========== */
+async function onAdEarn() {
+  const result = await watchAdWithSafety();
+  // Result is handled within watchAdWithSafety
+}
+
+adDoneBtn().addEventListener('click', ()=> { adModal().style.display = 'none'; });
+
+/* ========== Boot sequence ========== */
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    tg = window.Telegram.WebApp;
+    if (tg) tg.expand();
+  } catch(e){}
+
+  firebaseLoading().style.display = 'flex';
+
+  try {
+    if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id){
+      uid = 'user_' + tg.initDataUnsafe.user.id;
+      userData.userId = uid;
+      userData.name = tg.initDataUnsafe.user.first_name || '';
+      userData.username = tg.initDataUnsafe.user.username || '';
+    } else {
+      uid = 'guest_' + (localStorage.getItem('guestId') || (Math.floor(Math.random()*90000)+10000));
+      localStorage.setItem('guestId', uid);
+      userData.userId = uid;
+    }
+  } catch(e){
+    uid = 'guest_' + Math.floor(Math.random()*999999);
+    userData.userId = uid;
+  }
+
+  await detectLocation();
+
+  try {
+    await loadUserFromServer();
+    await loadSettings();
+    await loadAdSettings(); // Load ad settings
+    await loadWithdrawalRequests();
+    
+    // Check for referral code and process if available
+    checkReferralCode();
+    
+    // Update referral bonuses in background
+    updateReferralBonuses().catch(e => console.error('Referral bonus update error:', e));
+    
+    // Initialize ad status
+    adScriptLoaded = checkAdScript();
+    updateAdStatusIndicator();
+    
+    renderUI();
+    
+    firebaseLoading().style.display = 'none';
+    
+    document.getElementById('current-date').textContent = new Date().toDateString();
+    
+    // Event listeners
+    watchAdBtn().addEventListener('click', onAdEarn);
+    toggleWithdrawBtn().addEventListener('click', ()=> {
+      withdrawFormEl().style.display = (withdrawFormEl().style.display === 'none' || withdrawFormEl().style.display === '') ? 'block' : 'none';
+    });
+
+    document.querySelectorAll('.amount-btn').forEach(b => {
+      b.addEventListener('click', (ev)=>{
+        document.querySelectorAll('.amount-btn').forEach(x=>x.classList.remove('selected'));
+        b.classList.add('selected');
+        withdrawAmountInput().value = b.dataset.amount;
+      });
+    });
+
+    submitWithdrawBtn().addEventListener('click', submitWithdrawRequest);
+    
+    // New event listeners for community and referral
+    joinChannelBtn().addEventListener('click', openCommunityChannel);
+    joinGroupBtn().addEventListener('click', openSupportGroup);
+    copyRefCodeBtn().addEventListener('click', copyReferralCode);
+    shareRefLinkBtn().addEventListener('click', shareReferralLink);
+    claimRefBonusBtn().addEventListener('click', claimReferralBonuses);
+    
+    // Share modal event listeners
+    shareTelegram().addEventListener('click', shareToTelegram);
+    shareFacebook().addEventListener('click', shareToFacebook);
+    shareWhatsApp().addEventListener('click', shareToWhatsApp);
+    shareTwitter().addEventListener('click', shareToTwitter);
+    shareCopy().addEventListener('click', copyReferralLink);
+    closeShareModal().addEventListener('click', () => { shareModal().style.display = 'none'; });
+
+    setInterval(updateResetTimeUI, 60*1000);
+    
+  } catch (error) {
+    console.error('Boot sequence error:', error);
+    firebaseLoading().style.display = 'none';
+    showNotification('Loading failed. Please refresh.', false);
+  }
+});
+</script>
 </body>
 </html>
