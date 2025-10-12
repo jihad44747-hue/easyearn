@@ -20,74 +20,80 @@
       --warning: #ff9800;
       --danger: #f44336;
       --light: #f8f9fa;
-      --dark: #343a40;
-      --text: #333;
-      --text-light: #6c757d;
+      --dark: #121212;
+      --card-bg: #1e1e1e;
+      --text: #ffffff;
+      --text-light: #aaaaaa;
+      --border: #333333;
     }
     
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
     
     body {
-      background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
-      min-height: 100vh;
-      padding: 20px;
+      background-color: var(--dark);
       color: var(--text);
+      line-height: 1.6;
+      padding-bottom: 20px;
     }
     
     .app-container {
-      max-width: 400px;
+      max-width: 500px;
       margin: 0 auto;
-      background: white;
-      border-radius: 20px;
-      overflow: hidden;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      padding: 0 15px;
     }
     
     header {
-      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-      color: white;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: 15px;
       padding: 20px;
+      margin: 15px 0;
       text-align: center;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+    
+    h1 {
+      font-size: 24px;
+      margin-bottom: 10px;
+      font-weight: 700;
     }
     
     .balance-section {
-      text-align: center;
-      padding: 15px;
-      background: rgba(255,255,255,0.1);
-      border-radius: 15px;
       margin-top: 10px;
-    }
-    
-    .balance-amount {
-      font-size: 36px;
-      font-weight: 700;
-      margin: 10px 0;
     }
     
     .balance-label {
       font-size: 14px;
-      opacity: 0.9;
+      opacity: 0.8;
+    }
+    
+    .balance-amount {
+      font-size: 32px;
+      font-weight: 800;
+      margin: 5px 0;
     }
     
     .date-display {
       font-size: 14px;
-      opacity: 0.8;
-      margin-top: 5px;
+      opacity: 0.7;
     }
     
-    .content-section {
+    .card {
+      background-color: var(--card-bg);
+      border-radius: 15px;
       padding: 20px;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     }
     
     .section-title {
       font-size: 18px;
+      font-weight: 700;
       margin-bottom: 15px;
-      color: var(--primary);
       display: flex;
       align-items: center;
     }
@@ -95,25 +101,76 @@
     .section-title::before {
       content: '';
       display: inline-block;
-      width: 6px;
+      width: 4px;
       height: 20px;
-      background: var(--primary);
-      border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: 2px;
       margin-right: 10px;
     }
     
-    .card {
-      background: var(--light);
-      border-radius: 15px;
+    .btn {
+      display: block;
+      width: 100%;
       padding: 15px;
-      margin-bottom: 15px;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-bottom: 10px;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+    }
+    
+    .btn-success {
+      background: linear-gradient(135deg, #28a745, #20c997);
+      color: white;
+    }
+    
+    .btn-warning {
+      background: linear-gradient(135deg, #ffc107, #fd7e14);
+      color: white;
+    }
+    
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-top: 15px;
+    }
+    
+    .stat-item {
+      background-color: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      padding: 15px;
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 5px;
+    }
+    
+    .stat-label {
+      font-size: 12px;
+      opacity: 0.7;
     }
     
     .ad-system-status {
       display: flex;
       align-items: center;
-      margin-bottom: 10px;
+      margin-bottom: 15px;
     }
     
     .status-indicator {
@@ -124,161 +181,120 @@
     }
     
     .status-ready {
-      background: var(--success);
+      background-color: var(--success);
+      box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
     }
     
-    .btn {
-      display: block;
-      width: 100%;
-      padding: 15px;
-      border-radius: 12px;
-      border: none;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      text-align: center;
-      margin-top: 10px;
-    }
-    
-    .btn-primary {
-      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-      color: white;
-      box-shadow: 0 4px 15px rgba(106, 17, 203, 0.3);
-    }
-    
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(106, 17, 203, 0.4);
-    }
-    
-    .btn-success {
-      background: linear-gradient(135deg, #28a745, #20c997);
-      color: white;
-      box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
-    }
-    
-    .btn-warning {
-      background: linear-gradient(135deg, #ffc107, #fd7e14);
-      color: white;
-      box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
-    }
-    
-    .btn:disabled {
-      background: #ccc;
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
-    }
-    
-    .stats-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 10px;
-    }
-    
-    .stat-item {
-      text-align: center;
+    .ad-system-message {
       padding: 10px;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      border-radius: 8px;
+      margin-top: 10px;
+      font-size: 14px;
     }
     
-    .stat-value {
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--primary);
+    .ad-system-message.info {
+      background-color: rgba(33, 150, 243, 0.2);
+      border-left: 4px solid #2196f3;
     }
     
-    .stat-label {
-      font-size: 12px;
-      color: var(--text-light);
+    .ad-system-message.success {
+      background-color: rgba(76, 175, 80, 0.2);
+      border-left: 4px solid #4caf50;
     }
     
-    .referral-section {
-      text-align: center;
+    .ad-system-message.warning {
+      background-color: rgba(255, 152, 0, 0.2);
+      border-left: 4px solid #ff9800;
     }
     
-    .referral-code {
-      background: white;
-      border: 2px dashed var(--primary);
-      border-radius: 10px;
-      padding: 15px;
-      margin: 15px 0;
-      font-size: 20px;
-      font-weight: 700;
-      color: var(--primary);
+    .ad-system-message.error {
+      background-color: rgba(244, 67, 54, 0.2);
+      border-left: 4px solid #f44336;
     }
     
-    .btn-group {
-      display: flex;
-      gap: 10px;
-    }
-    
-    .btn-secondary {
-      background: white;
-      color: var(--primary);
-      border: 2px solid var(--primary);
-    }
-    
-    .referral-stats {
+    .community-stats {
       display: flex;
       justify-content: space-around;
       margin: 15px 0;
     }
     
-    .referral-stat {
+    .community-benefits ul {
+      list-style-type: none;
+      padding-left: 0;
+    }
+    
+    .community-benefits li {
+      padding: 5px 0;
+      font-size: 14px;
+      position: relative;
+      padding-left: 20px;
+    }
+    
+    .community-benefits li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: var(--success);
+      font-weight: bold;
+    }
+    
+    .referral-code {
+      text-align: center;
+      margin: 15px 0;
+    }
+    
+    .referral-code-text {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin: 10px 0;
+    }
+    
+    .btn-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    
+    .referral-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin: 15px 0;
+    }
+    
+    .stat-box {
+      background-color: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      padding: 15px;
       text-align: center;
     }
     
-    .referral-count {
-      font-size: 24px;
-      font-weight: 700;
-      color: var(--primary);
-    }
-    
-    .referral-label {
-      font-size: 12px;
-      color: var(--text-light);
-    }
-    
-    .bonus-item {
-      display: flex;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-    
-    .bonus-check {
-      margin-right: 10px;
-      color: var(--success);
-    }
-    
-    .bonus-text {
-      flex: 1;
+    .bonus-claim-btn {
+      margin-top: 15px;
     }
     
     .withdrawal-methods {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 10px;
-      margin: 15px 0;
+      margin-bottom: 15px;
     }
     
     .method-item {
-      background: white;
-      border: 1px solid #ddd;
+      background-color: rgba(255, 255, 255, 0.05);
       border-radius: 10px;
       padding: 10px;
       text-align: center;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.3s ease;
     }
     
     .method-item.selected {
-      border-color: var(--primary);
-      background: rgba(106, 17, 203, 0.05);
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
     }
     
     .method-icon {
@@ -288,49 +304,49 @@
     
     .method-name {
       font-size: 12px;
-      font-weight: 600;
     }
     
     .amount-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 10px;
-      margin: 15px 0;
+      margin-bottom: 15px;
     }
     
     .amount-option {
-      background: white;
-      border: 1px solid #ddd;
+      background-color: rgba(255, 255, 255, 0.05);
       border-radius: 10px;
-      padding: 10px;
+      padding: 15px;
       text-align: center;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.3s ease;
     }
     
     .amount-option.selected {
-      border-color: var(--primary);
-      background: rgba(106, 17, 203, 0.05);
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
     }
     
     .custom-amount {
       width: 100%;
-      padding: 12px;
+      padding: 15px;
       border-radius: 10px;
-      border: 1px solid #ddd;
+      border: 1px solid var(--border);
+      background-color: rgba(255, 255, 255, 0.05);
+      color: var(--text);
       font-size: 16px;
-      margin: 10px 0;
-    }
-    
-    .history-section {
-      margin-top: 20px;
+      margin-bottom: 15px;
     }
     
     .history-item {
       display: flex;
       justify-content: space-between;
-      padding: 12px 0;
-      border-bottom: 1px solid #eee;
+      align-items: center;
+      padding: 15px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .history-item:last-child {
+      border-bottom: none;
     }
     
     .history-details {
@@ -343,205 +359,119 @@
     
     .history-date {
       font-size: 12px;
-      color: var(--text-light);
+      opacity: 0.7;
     }
     
     .history-amount {
       font-weight: 700;
-      color: var(--primary);
+      margin-right: 10px;
     }
     
     .history-status {
+      padding: 5px 10px;
+      border-radius: 20px;
       font-size: 12px;
-      padding: 3px 8px;
-      border-radius: 10px;
-      margin-left: 10px;
+      font-weight: 600;
     }
     
     .status-pending {
-      background: #fff3cd;
-      color: #856404;
+      background-color: rgba(255, 152, 0, 0.2);
+      color: #ff9800;
     }
     
     .status-paid {
-      background: #d4edda;
-      color: #155724;
+      background-color: rgba(76, 175, 80, 0.2);
+      color: #4caf50;
     }
     
     .status-rejected {
-      background: #f8d7da;
-      color: #721c24;
+      background-color: rgba(244, 67, 54, 0.2);
+      color: #f44336;
+    }
+    
+    .loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: var(--dark);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
     }
     
     .notification {
       position: fixed;
       top: 20px;
-      right: 20px;
+      left: 50%;
+      transform: translateX(-50%);
       padding: 15px 20px;
-      background: var(--success);
-      color: #fff;
-      border-radius: 12px;
-      display: none;
-      z-index: 2000;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.15);
-      animation: slideIn 0.3s ease;
-    }
-    
-    @keyframes slideIn {
-      from { transform: translateX(100px); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
-    }
-    
-    .loading {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.7);
-      z-index: 3000;
-      justify-content: center;
-      align-items: center;
+      border-radius: 10px;
       color: white;
-      font-size: 18px;
+      font-weight: 600;
+      z-index: 1000;
+      display: none;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     }
     
     .ad-container {
-      display: none;
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,0.9);
-      z-index: 4000;
+      background-color: rgba(0, 0, 0, 0.9);
+      display: none;
       justify-content: center;
       align-items: center;
       flex-direction: column;
-      color: white;
-    }
-    
-    .ad-timer {
-      font-size: 24px;
-      margin: 20px 0;
+      z-index: 999;
     }
     
     .ad-close {
       position: absolute;
       top: 20px;
       right: 20px;
-      background: rgba(255,255,255,0.2);
+      background: none;
       border: none;
       color: white;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      font-size: 20px;
+      font-size: 24px;
       cursor: pointer;
       display: none;
     }
     
+    .ad-timer {
+      font-size: 48px;
+      font-weight: 800;
+      margin: 20px 0;
+      color: var(--secondary);
+    }
+    
     .ad-reward {
       font-size: 18px;
-      margin-top: 20px;
+      font-weight: 600;
+      margin-top: 10px;
     }
     
     .country-restriction-warning {
-      background: #fff3cd;
-      border: 1px solid #ffeaa7;
-      border-radius: 10px;
+      background-color: rgba(244, 67, 54, 0.2);
+      border-left: 4px solid #f44336;
       padding: 15px;
+      border-radius: 8px;
       margin-bottom: 15px;
-      text-align: center;
-      color: #856404;
-    }
-
-    /* Community Section Enhancements */
-    .community-stats {
-      display: flex;
-      justify-content: space-around;
-      margin-top: 15px;
-      text-align: center;
     }
     
-    .community-benefits {
-      margin-top: 15px;
-      padding: 12px;
-      background: #f0f8ff;
-      border-radius: 8px;
-      border-left: 4px solid var(--primary);
-    }
-    
-    .community-benefits ul {
-      font-size: 13px;
-      color: #555;
-      padding-left: 20px;
-    }
-    
-    .community-benefits li {
-      margin-bottom: 6px;
-    }
-
-    /* Improved Ad System Styles */
-    .ad-system-message {
-      text-align: center;
-      padding: 10px;
-      margin: 10px 0;
-      border-radius: 8px;
-      font-weight: 500;
-    }
-    
-    .ad-system-message.success {
-      background-color: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
-    }
-    
-    .ad-system-message.warning {
-      background-color: #fff3cd;
-      color: #856404;
-      border: 1px solid #ffeaa7;
-    }
-    
-    .ad-system-message.error {
-      background-color: #f8d7da;
-      color: #721c24;
-      border: 1px solid #f5c6cb;
-    }
-    
-    .ad-system-message.info {
-      background-color: #d1ecf1;
-      color: #0c5460;
-      border: 1px solid #bee5eb;
-    }
-
-    /* Referral Section Styles */
     .small {
       font-size: 14px;
-      color: var(--text-light);
-      margin-bottom: 10px;
+      opacity: 0.8;
     }
     
-    .stat-box {
-      text-align: center;
-      padding: 10px;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    }
-    
-    .referral-bonus-section {
-      margin-top: 15px;
-      padding: 15px;
-      background: #fff8e1;
-      border-radius: 10px;
-      border: 1px solid #ffeaa7;
-    }
-    
-    .bonus-claim-btn {
-      margin-top: 10px;
-      font-weight: 600;
+    .community-section {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
   </style>
 </head>
@@ -585,8 +515,8 @@
         <div class="section-title">🎥 Watch & Earn Points</div>
         
         <div class="ad-system-status">
-          <div class="status-indicator status-ready"></div>
-          <div>Ad system ready (min 6s)</div>
+          <div class="status-indicator status-ready" id="statusIndicator"></div>
+          <div id="statusText">Ad system ready (min 6s)</div>
         </div>
         
         <button class="btn btn-primary" id="watchBtn">
@@ -611,7 +541,7 @@
         </div>
         
         <div style="font-size: 14px; color: var(--text-light); margin-top: 10px;">
-          Resets in <span id="resetTime">17h 20m</span>
+          Resets in <span id="resetTime">24h 00m</span>
         </div>
       </div>
       
@@ -664,7 +594,7 @@
 
         <div class="referral-code">
           <div class="small">Your Referral Code:</div>
-          <div class="referral-code-text" id="referralCode">LOADING...</div>
+          <div class="referral-code-text" id="referralCode">A262H0</div>
           <div class="btn-group">
             <button id="copyCode" class="btn btn-primary">📋 Copy Code</button>
             <button id="shareLink" class="btn btn-success">🔗 Share Link</button>
@@ -778,6 +708,8 @@
       const adReward = document.getElementById("adReward");
       const countryRestrictionWarning = document.getElementById("countryRestrictionWarning");
       const adSystemMessage = document.getElementById("adSystemMessage");
+      const statusIndicator = document.getElementById("statusIndicator");
+      const statusText = document.getElementById("statusText");
 
       // Community Section Elements
       const joinChannelBtn = document.getElementById("joinChannelBtn");
@@ -792,7 +724,7 @@
       // App settings and user data
       let appSettings = {
         perAdRate: 0.06,
-        dailyTaskLimit: 10,
+        dailyTaskLimit: 1234,
         allowedCountries: [],
         restrictionEnabled: false,
         withdrawalMethods: []
@@ -849,6 +781,10 @@
       let selectedMethod = null;
       let selectedAmount = null;
 
+      // Real-time listeners
+      let settingsUnsubscribe = null;
+      let userUnsubscribe = null;
+
       // Initialize the app
       async function initApp() {
         // Show loading
@@ -860,6 +796,9 @@
           
           // Load app settings
           await loadAppSettings();
+          
+          // Set up real-time listeners
+          setupRealtimeListeners();
           
           // Check country restrictions
           await checkCountryRestriction();
@@ -905,6 +844,52 @@
           // Hide loading
           loading.style.display = 'none';
         }
+      }
+
+      // Set up real-time Firebase listeners
+      function setupRealtimeListeners() {
+        // Listen for settings changes
+        settingsUnsubscribe = db.collection("settings").doc("appSettings")
+          .onSnapshot((doc) => {
+            if (doc.exists) {
+              const settings = doc.data();
+              appSettings.perAdRate = settings.perAdRate || 0.06;
+              appSettings.dailyTaskLimit = settings.dailyTaskLimit || 1234;
+              
+              // Update UI
+              perAdRate.textContent = appSettings.perAdRate.toFixed(2);
+              dailyTaskLimit.textContent = appSettings.dailyTaskLimit;
+              updateUI();
+              
+              console.log("Settings updated in real-time");
+            }
+          }, (error) => {
+            console.error("Error listening to settings:", error);
+          });
+
+        // Listen for user data changes
+        userUnsubscribe = db.collection("users").doc(userData.id)
+          .onSnapshot((doc) => {
+            if (doc.exists) {
+              const data = doc.data();
+              // Update user data but preserve local state that might not be in Firebase yet
+              const previousBalance = userData.balance;
+              userData = {
+                ...userData,
+                ...data,
+                id: userData.id // Preserve ID
+              };
+              
+              // Update UI if balance changed
+              if (previousBalance !== userData.balance) {
+                updateUI();
+              }
+              
+              console.log("User data updated in real-time");
+            }
+          }, (error) => {
+            console.error("Error listening to user data:", error);
+          });
       }
 
       // Get or create user in Firebase
@@ -1008,12 +993,6 @@
         return result;
       }
 
-      // Generate referral link
-      function generateReferralLink() {
-        const botUsername = 'easyearn11_bot'; // Your actual bot username
-        return `https://t.me/${botUsername}?start=${userData.referralCode}`;
-      }
-
       // Check for referral code in URL parameters
       function checkReferralCode() {
         try {
@@ -1073,6 +1052,7 @@
               });
               
               console.log('Referral processed successfully');
+              showNotification('🎉 Referral bonus applied!');
               
               // Update local user data if current user is the referrer
               if (userData.id === referrerId) {
@@ -1115,7 +1095,7 @@
           if (settingsDoc.exists) {
             const settings = settingsDoc.data();
             appSettings.perAdRate = settings.perAdRate || 0.06;
-            appSettings.dailyTaskLimit = settings.dailyTaskLimit || 10;
+            appSettings.dailyTaskLimit = settings.dailyTaskLimit || 1234;
           }
           
           // Load country restrictions
@@ -1167,8 +1147,22 @@
         todayAds.textContent = `${userData.todayAds}/${appSettings.dailyTaskLimit}`;
         adClicks.textContent = userData.adClicks;
         
-        // Enable/disable watch ad button based on daily limit and blocking
-        watchBtn.disabled = userData.todayAds >= appSettings.dailyTaskLimit || userData.isBlocked;
+        // Update status indicator
+        if (userData.isBlocked) {
+          statusIndicator.className = 'status-indicator';
+          statusIndicator.style.background = 'var(--danger)';
+          statusText.textContent = 'Account blocked - Contact support';
+          watchBtn.disabled = true;
+        } else if (userData.todayAds >= appSettings.dailyTaskLimit) {
+          statusIndicator.className = 'status-indicator';
+          statusIndicator.style.background = 'var(--warning)';
+          statusText.textContent = 'Daily limit reached';
+          watchBtn.disabled = true;
+        } else {
+          statusIndicator.className = 'status-indicator status-ready';
+          statusText.textContent = 'Ad system ready (min 6s)';
+          watchBtn.disabled = false;
+        }
         
         // Update ad reward display
         adReward.textContent = `Earning: ৳${appSettings.perAdRate.toFixed(2)}`;
@@ -1180,7 +1174,7 @@
           channelIcon.style.display = 'none';
           channelText.textContent = 'Joined Our Channel';
           channelCheck.style.display = 'inline';
-          joinChannelBtn.style.background = 'linear-gradient(90deg, #28a745, #20c997)';
+          joinChannelBtn.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
           joinChannelBtn.disabled = false;
         }
         
@@ -1188,7 +1182,7 @@
           groupIcon.style.display = 'none';
           groupText.textContent = 'Joined Support Group';
           groupCheck.style.display = 'inline';
-          joinGroupBtn.style.background = 'linear-gradient(90deg, #ffc107, #fd7e14)';
+          joinGroupBtn.style.background = 'linear-gradient(135deg, #ffc107, #fd7e14)';
           joinGroupBtn.disabled = false;
         }
       }
@@ -1201,6 +1195,9 @@
           document.getElementById("refEarned").textContent = (userData.referralEarnings || 0).toFixed(2);
           const claimable = calcClaimable(userData);
           document.getElementById("claimable").textContent = claimable;
+          
+          // Enable/disable claim button
+          claimBonusBtn.disabled = claimable <= 0;
         } catch(e){ console.error(e); }
       }
 
@@ -1238,7 +1235,7 @@
           referralBonuses: bonuses
         });
 
-        showNotification("Bonus claimed successfully!");
+        showNotification(`🎉 Bonus ৳${claimable} claimed successfully!`);
         loadReferralSection();
         updateUI();
       }
@@ -1246,7 +1243,7 @@
       // Copy code function
       function copyCodeFunc(){
         const code = document.getElementById("referralCode").textContent;
-        navigator.clipboard.writeText(code).then(()=> showNotification("Referral code copied!"));
+        navigator.clipboard.writeText(code).then(()=> showNotification("📋 Referral code copied!"));
       }
 
       // Share link function
@@ -1267,7 +1264,7 @@
         } else {
           navigator.clipboard.writeText(text)
             .then(() => {
-              showNotification("Referral link copied to clipboard!");
+              showNotification("🔗 Referral link copied to clipboard!");
             })
             .catch(err => {
               console.error('Failed to copy: ', err);
@@ -1478,6 +1475,7 @@
       function addPoint() {
         userData.balance += appSettings.perAdRate;
         userData.todayAds++;
+        userData.adClicks++;
         
         // Add to ad history
         userData.adHistory.push({
@@ -1562,7 +1560,7 @@
 
         // Show close button
         adClose.style.display = 'block';
-        watchBtn.disabled = false;
+        watchBtn.disabled = userData.todayAds >= appSettings.dailyTaskLimit;
       };
 
       // Close ad container
